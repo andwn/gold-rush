@@ -1,10 +1,12 @@
 #include "common.h"
 #include "gamemode.h"
 #include "joy.h"
+#include "stdlib.h"
 #include "vdp.h"
 #include "xgm.h"
 
 int main() {
+	mem_init();
 	vdp_init();
 	vdp_reset();
 	joy_init();

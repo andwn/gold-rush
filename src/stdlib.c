@@ -5,7 +5,7 @@
 #define USED        1
 
 // end of bss segment --> start of heap
-extern uint32_t _end;
+extern uint32_t _bend;
 
 static uint16_t* s_free;
 static uint16_t* s_heap;
@@ -41,7 +41,7 @@ static uint16_t* pack(uint16_t nsize) {
 
 void mem_init() {
     // point to end of bss (start of heap)
-    uint32_t h = (uint32_t)&_end;
+    uint32_t h = (uint32_t)&_bend;
     // 2 bytes aligned
     h += 1;
     h &= ~1;
