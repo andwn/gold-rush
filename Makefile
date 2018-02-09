@@ -8,14 +8,21 @@ LD   = $(MARSBIN)/m68k-elf-ld
 NM   = $(MARSBIN)/m68k-elf-nm
 OBJC = $(MARSBIN)/m68k-elf-objcopy
 
+# Z80 assembler used to build XGM
 ASMZ80   = $(TOOLSBIN)/sjasm
+# Stef's Tools
 BINTOS   = $(TOOLSBIN)/bintos
 RESCOMP  = $(TOOLSBIN)/rescomp
 XGMTOOL  = $(TOOLSBIN)/xgmtool
 WAVTORAW = $(TOOLSBIN)/wavtoraw
+# Sik's Tools
+MDTILER = $(TOOLSBIN)/mdtiler
+UFTC	= $(TOOLSBIN)/uftc
 
+# We need to use the GCC version to locate the correct plugin & libgcc path
 GCC_VER := $(shell $(CC) -dumpversion)
 PLUGIN   = $(MARSDEV)/m68k-elf/libexec/gcc/m68k-elf/$(GCC_VER)
+# Added for Windows compatibility via MSYS2
 LTO_SO   = liblto_plugin.so
 ifeq ($(OS),Windows_NT)
 	LTO_SO = liblto_plugin-0.dll
@@ -37,6 +44,11 @@ OBJS  = $(RESS:.res=.o)
 OBJS += $(Z80S:.s80=.o)
 OBJS += $(CS:.c=.o)
 OBJS += $(SS:.s=.o)
+
+# mdtiler scripts to convert pngs to tilesets and tilemaps
+MDT_SRCS = $(wildcard res/*.mdt)
+MDT_PATS = $(MDT_SRCS:.mdt=.pat)
+MDT_MAPS = $(MDT_SRCS:.mdt=.map)
 
 .SECONDARY: gold.elf
 
@@ -65,7 +77,7 @@ gold.bin: gold.elf
 	$(OBJC) -O binary $< temp.bin
 	dd if=temp.bin of=$@ bs=8K conv=sync
 
-gold.elf: boot.o $(OBJS)
+gold.elf: boot.o $(MDT_PATS) $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) boot.o $(OBJS) $(LIBS)
 
 %.o: %.c
@@ -85,10 +97,13 @@ gold.elf: boot.o $(OBJS)
 %.s: %.o80
 	$(BINTOS) $<
 
+%.pat: %.mdt
+	$(MDTILER) $<
+
 
 .PHONY: clean
 
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJS) $(MDT_PATS) $(MDT_MAPS)
 	rm -f gold.bin gold.elf temp.bin symbol.txt boot.o
 	rm -f src/xgm/z80_xgm.s src/xgm/z80_xgm.o80 src/xgm/z80_xgm.h out.lst

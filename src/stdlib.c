@@ -1,7 +1,7 @@
 #include "common.h"
 #include "stdlib.h"
 
-#define MEMORY_HIGH 0xFFA400
+#define MEMORY_HIGH 0xFFF800
 #define USED        1
 
 // end of bss segment --> start of heap

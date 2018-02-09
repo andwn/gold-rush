@@ -127,6 +127,20 @@ void vdp_map_set_xy(uint16_t plan, uint16_t tile, uint16_t x, uint16_t y) {
 	*vdp_data_port = tile;
 }
 
+void vdp_map_set_hline(uint16_t plan, const uint16_t *tiles, uint16_t x, uint16_t y, uint16_t len) {
+	uint16_t addr = plan + ((x + (y << PLAN_WIDTH_SFT)) << 1);
+	if(len > 64) len = 64;
+	vdp_dma_vram((uint32_t) tiles, addr, len);
+}
+
+void vdp_map_set_vline(uint16_t plan, const uint16_t *tiles, uint16_t x, uint16_t y, uint16_t len) {
+	uint16_t addr = plan + ((x + (y << PLAN_WIDTH_SFT)) << 1);
+	if(len > 32) len = 32;
+	vdp_set_autoinc(128);
+	vdp_dma_vram((uint32_t) tiles, addr, len);
+	vdp_set_autoinc(2);
+}
+
 void vdp_map_fill_hline(uint16_t plan, uint16_t tile, uint16_t x, uint16_t y, uint16_t len) {
 	uint16_t buf[64];
 	uint16_t addr = plan + ((x + (y << PLAN_WIDTH_SFT)) << 1);

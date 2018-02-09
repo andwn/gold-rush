@@ -23,7 +23,7 @@
 #define TILE_EXTRA3INDEX 		(0xFA80 >> 5) // 12 tiles after sprite list
 
 #define TILE_ATTR(pal, prio, flipV, flipH, index)                                              \
-	(((flipH) << 11) + ((flipV) << 12) + ((pal) << 13) + ((prio) << 15) + (index))
+	(((flipH) << 11) | ((flipV) << 12) | ((pal) << 13) | ((prio) << 15) | (index))
 
 #define sprite_pos(s, px, py) {                                                                \
 	(s).x = (px) + 128;                                                                        \
@@ -69,6 +69,8 @@ void vdp_load_tiles(const void *data, uint16_t index, uint16_t num);
 
 // Tile maps
 void vdp_map_set_xy(uint16_t plan, uint16_t tile, uint16_t x, uint16_t y);
+void vdp_map_set_hline(uint16_t plan, const uint16_t *tiles, uint16_t x, uint16_t y, uint16_t len);
+void vdp_map_set_vline(uint16_t plan, const uint16_t *tiles, uint16_t x, uint16_t y, uint16_t len);
 void vdp_map_fill_hline(uint16_t plan, uint16_t tile, uint16_t x, uint16_t y, uint16_t len);
 void vdp_map_fill_vline(uint16_t plan, uint16_t tile, uint16_t x, uint16_t y, uint16_t len);
 void vdp_map_clear(uint16_t plan);

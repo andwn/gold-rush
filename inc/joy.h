@@ -35,5 +35,5 @@
 
 void joy_init();
 uint8_t joy_type(uint16_t joy);
-uint16_t  joy_read(uint16_t joy);
+uint16_t joy_read(uint16_t joy);
 void joy_update();
