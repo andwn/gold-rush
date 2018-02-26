@@ -29,9 +29,6 @@ void splash() {
 }
 
 void game() {
-	//vdp_vsync();
-	//vdp_map_clear(VDP_PLAN_A);
-	//vdp_map_clear(VDP_PLAN_B);
 	vdp_vsync();
 	vdp_load_tiles(PAT_Layout, 0, sizeof(PAT_Layout) / 32);
 	uint16_t mapind = 0;
