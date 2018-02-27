@@ -2,4 +2,4 @@ input res/layout.png
 output res/layout.pat
 output2 res/layout.map
 
-map 0 0 40 28
+map 0 0 40 30

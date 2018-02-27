@@ -1,10 +1,13 @@
 #include "common.h"
-#include "gamemode.h"
+#include "beatmap.h"
 #include "joy.h"
+#include "note.h"
 #include "stdlib.h"
 #include "vdp.h"
 #include "xgm.h"
 #include "resources.h"
+
+#include "gamemode.h"
 
 void splash() {
 	vdp_vsync();
@@ -24,6 +27,7 @@ void splash() {
 		joy_update();
 		if(!--splash_time) break;
 		vdp_vsync();
+		xgm_vblank();
 	}
 	gamemode = GM_GAME;
 }
@@ -31,17 +35,24 @@ void splash() {
 void game() {
 	vdp_vsync();
 	vdp_load_tiles(PAT_Layout, 0, sizeof(PAT_Layout) / 32);
-	uint16_t mapind = 0;
-	for(uint16_t y = 0; y < 28; y++) {
+	uint16_t mapind = vdp_get_palmode() ? 0 : 40;
+	for(uint16_t y = 0; y < (vdp_get_palmode() ? 30 : 28); y++) {
 		vdp_map_set_hline(VDP_PLAN_B, (uint16_t*) MAP_Layout + mapind, 0, y, 40);
 		mapind += 40;
 	}
 	vdp_set_colors(0, PAL_Layout.data, 16);
 	
+	beatmap_init();
+	notes_init();
+	
 	while(TRUE) {
 		joy_update();
 		
+		beatmap_update();
+		notes_update();
+		
 		vdp_vsync();
+		xgm_vblank();
 	}
 }
 

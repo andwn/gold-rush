@@ -1,6 +1,42 @@
 #include "common.h"
+#include "note.h"
+#include "stdlib.h"
+#include "vdp.h"
 
-uint8_t beatmap[64*4*4] = {
+#include "beatmap.h"
+
+static uint8_t beatmap[BEATMAP_LEN];
+
+void beatmap_init() {
+	c_beat = c_frame = c_subframe = 0;
+	// GOLD RUSH is 162 bpm, each beat is 22.2222 or 18.1582 frames
+	s_frames = vdp_get_palmode() ? 18 : 22;
+	s_subframes = vdp_get_palmode() ? 1582 : 2222;
+}
+
+static void do_row(uint16_t index) {
+	uint8_t row = beatmap[BEATMAP_LEN - index];
+	for(uint8_t mask = NOTE_SCRATCH; mask; mask >>= 1) {
+		if(row & mask) note_create(mask);
+	}
+}
+
+void beatmap_update() {
+	// Update timers
+	c_frame++;
+	c_subframe += s_subframes;
+	if(c_subframe > 9999) {
+		c_subframe -= 10000;
+		c_frame++;
+	}
+	if(c_frame >= s_frames) {
+		c_frame -= s_frames;
+		c_beat++;
+		do_row(c_beat);
+	}
+}
+
+static uint8_t beatmap[BEATMAP_LEN] = {
 	/* 16 */
 	0b00000000,
 	0b00000000,
