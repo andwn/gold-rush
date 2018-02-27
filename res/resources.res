@@ -8,3 +8,5 @@ BIN		stop_xgm	"stop_xgm.bin"
 
 BIN		PAT_Layout	"layout.pat"
 BIN		MAP_Layout	"layout.map"
+
+BIN		PAT_Notes	"notes.pat"

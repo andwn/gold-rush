@@ -34,12 +34,16 @@ void splash() {
 
 void game() {
 	vdp_vsync();
+	// Background / layout
 	vdp_load_tiles(PAT_Layout, 0, sizeof(PAT_Layout) / 32);
 	uint16_t mapind = vdp_get_palmode() ? 0 : 40;
 	for(uint16_t y = 0; y < (vdp_get_palmode() ? 30 : 28); y++) {
 		vdp_map_set_hline(VDP_PLAN_B, (uint16_t*) MAP_Layout + mapind, 0, y, 40);
 		mapind += 40;
 	}
+	// Note tiles
+	vdp_load_tiles(PAT_Notes, TILE_NOTEINDEX, sizeof(PAT_Notes) / 32);
+	// Main palette
 	vdp_set_colors(0, PAL_Layout.data, 16);
 	
 	beatmap_init();
@@ -53,6 +57,7 @@ void game() {
 		
 		vdp_vsync();
 		xgm_vblank();
+		vdp_sprites_update();
 	}
 }
 

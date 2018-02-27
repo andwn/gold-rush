@@ -49,7 +49,7 @@ void vdp_reset() {
 	vdp_sprites_clear();
 	vdp_sprites_update();
 	// (Re)load the font
-	vdp_load_font(TILE_EXTRA1INDEX);
+	vdp_load_font(TILE_FONTINDEX);
 	vdp_font_pal(0);
 	vdp_set_color(1, 0x000);
 	vdp_set_color(15, 0xEEE);

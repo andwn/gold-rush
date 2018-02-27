@@ -18,9 +18,15 @@
 #define TILE_INDEX_MASK         0x7FF
 
 #define TILE_BLANKINDEX         0x0000 // First tile is kept blank/transparent
+#define TILE_FONTINDEX			((0xC000 >> 5) - 96) // Before PLAN_A
 #define TILE_EXTRA1INDEX 		(0xD000 >> 5) // 128 tiles after PLAN_A
 #define TILE_EXTRA2INDEX 		(0xF000 >> 5) // 64 tiles after PLAN_B
 #define TILE_EXTRA3INDEX 		(0xFA80 >> 5) // 12 tiles after sprite list
+
+// Game specific tile indeces
+#define TILE_LAYOUTINDEX		0x0000
+#define TILE_BUFFERINDEX		TILE_EXTRA1INDEX
+#define TILE_NOTEINDEX			TILE_EXTRA3INDEX
 
 #define TILE_ATTR(pal, prio, flipV, flipH, index)                                              \
 	(((flipH) << 11) | ((flipV) << 12) | ((pal) << 13) | ((prio) << 15) | (index))

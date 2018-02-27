@@ -1,0 +1,4 @@
+input res/notes.png
+output res/notes.pat
+
+tiles 0 0 8 1
