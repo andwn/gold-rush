@@ -5,7 +5,7 @@
 #include "xgm/z80_xgm.h" /* z80 program blob */
 #include "resources.h"
 
-extern const uint8_t smp_null[0x100];
+const uint8_t smp_null[0x100] __attribute__((aligned(256))) = {};
 
 // Variables
 static uint16_t xgmTempo;
@@ -193,98 +193,8 @@ void xgm_init() {
 	xgmTempoDef = vdp_get_palmode() ? 50 : 60;
 }
 
-
-void xgm_music_play(const uint8_t *song) {
-    uint8_t ids[0x100-4];
-    uint32_t addr;
-    // prepare sample id table
-    for(uint16_t i = 0; i < 0x3F; i++) {
-        // sample address in sample bank data
-        addr = song[(i * 4) + 0] << 8;
-        addr |= song[(i * 4) + 1] << 16;
-        // silent sample ? use null sample address
-        if (addr == 0xFFFF00) addr = (uint32_t) smp_null;
-        // adjust sample address (make it absolute)
-        else addr += ((uint32_t) song) + 0x100;
-        // write adjusted addr
-        ids[(i * 4) + 0] = addr >> 8;
-        ids[(i * 4) + 1] = addr >> 16;
-        // and recopy len
-        ids[(i * 4) + 2] = song[(i * 4) + 2];
-        ids[(i * 4) + 3] = song[(i * 4) + 3];
-    }
-    // upload sample id table (first entry is silent sample, we don't transfer it)
-    z80_upload(0x1C00 + 4, ids, 0x100 - 4, FALSE);
-    // get song address and bypass sample id table
-    addr = ((uint32_t) song) + 0x100;
-    // bypass sample data (use the sample data size)
-    addr += song[0xFC] << 8;
-    addr += song[0xFD] << 16;
-    // and bypass the music data size field
-    addr += 4;
-    // request Z80 BUS
-    z80_request(TRUE);
-    // point to Z80 XGM address parameter
-    volatile uint8_t *pb = (uint8_t*) (Z80_DRV_PARAMS + 0x00);
-    // set XGM music data address
-    pb[0x00] = addr >> 0;
-    pb[0x01] = addr >> 8;
-    pb[0x02] = addr >> 16;
-    pb[0x03] = addr >> 24;
-    // point to Z80 command
-    pb = (uint8_t*) Z80_DRV_COMMAND;
-    // set play XGM command
-    *pb |= (1 << 6);
-    // point to PENDING_FRM parameter
-    pb = (uint8_t*) (Z80_DRV_PARAMS + 0x0F);
-    // clear pending frame
-    *pb = 0;
-    z80_release();
-}
-
-void xgm_music_stop() {
-    z80_request(TRUE);
-    // special xgm sequence to stop any sound
-    uint32_t addr = ((uint32_t) stop_xgm);
-    // point to Z80 XGM address parameter
-    volatile uint8_t *pb = (uint8_t*) (Z80_DRV_PARAMS + 0x00);
-    // set XGM music data address
-    pb[0x00] = addr >> 0;
-    pb[0x01] = addr >> 8;
-    pb[0x02] = addr >> 16;
-    pb[0x03] = addr >> 24;
-    // point to Z80 command
-    pb = (uint8_t*) Z80_DRV_COMMAND;
-    // set play XGM command
-    *pb |= (1 << 6);
-    // point to PENDING_FRM parameter
-    pb = (uint8_t*) (Z80_DRV_PARAMS + 0x0F);
-    // clear pending frame
-    *pb = 0;
-    z80_release();
-}
-
-void xgm_music_pause() {
-    z80_request(TRUE);
-    volatile uint8_t *pb = (uint8_t*) Z80_DRV_COMMAND;
-    // set pause XGM command
-    *pb |= (1 << 4);
-    z80_release();
-}
-
-void xgm_music_resume() {
-    z80_request(TRUE);
-    volatile uint8_t *pb = (uint8_t*) Z80_DRV_COMMAND;
-    // set resume XGM command
-    *pb |= (1 << 5);
-    // point to PENDING_FRM parameter
-    pb = (uint8_t*) (Z80_DRV_PARAMS + 0x0F);
-    // clear pending frame
-    *pb = 0;
-    z80_release();
-}
-
 void xgm_pcm_set(const uint8_t id, const uint8_t *sample, const uint32_t len) {
+	z80_request(TRUE);
     // point to sample id table
     volatile uint8_t *pb = (uint8_t*) (0xA01C00 + (id * 4));
     // write sample addr
@@ -292,6 +202,7 @@ void xgm_pcm_set(const uint8_t id, const uint8_t *sample, const uint32_t len) {
     pb[0x01] = ((uint32_t) sample) >> 16;
     pb[0x02] = len >> 8;
     pb[0x03] = len >> 16;
+    z80_release();
 }
 
 void xgm_pcm_play(const uint8_t id, const uint8_t priority, const uint16_t channel) {
@@ -306,22 +217,6 @@ void xgm_pcm_play(const uint8_t id, const uint8_t priority, const uint16_t chann
     // set play PCM channel command
     *pb |= (Z80_DRV_COM_PLAY << channel);
     z80_release();
-}
-
-void xgm_protect(uint8_t enable) {
-    // point on bus req and reset ports
-    volatile uint16_t *pw_bus = (uint16_t*) Z80_HALT_PORT;
-    volatile uint16_t *pw_reset = (uint16_t*) Z80_RESET_PORT;
-    // take bus and end reset (fast method)
-    *pw_bus = 0x0100;
-    *pw_reset = 0x0100;
-    // wait for bus taken
-    while (*pw_bus & 0x0100);
-    // point to Z80 PROTECT parameter
-    volatile uint8_t *pb = (uint8_t *) (Z80_DRV_PARAMS + 0x0D);
-    *pb = enable;
-    // release bus
-    *pw_bus = 0x0000;
 }
 
 // VInt processing for XGM driver

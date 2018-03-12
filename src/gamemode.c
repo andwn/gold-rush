@@ -43,11 +43,15 @@ void game() {
 	}
 	// Note tiles
 	vdp_load_tiles(PAT_Notes, TILE_NOTEINDEX, sizeof(PAT_Notes) / 32);
-	// Main palette
+	// Layout/note and video palettes
 	vdp_set_colors(0, PAL_Layout.data, 16);
+	vdp_set_colors(16, PAL_Video.data, 16);
 	
 	beatmap_init();
 	notes_init();
+	
+	xgm_pcm_set(0x81, PCM_GoldRush, sizeof(PCM_GoldRush));
+	xgm_pcm_play(0x81, 5, 0);
 	
 	while(TRUE) {
 		joy_update();

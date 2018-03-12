@@ -12,6 +12,7 @@ OBJC = $(MARSBIN)/m68k-elf-objcopy
 ASMZ80   = $(TOOLSBIN)/sjasm
 # Stef's Tools
 BINTOS   = $(TOOLSBIN)/bintos
+LZ4W     = java -jar $(TOOLSBIN)/lz4w.jar
 RESCOMP  = $(TOOLSBIN)/rescomp
 XGMTOOL  = $(TOOLSBIN)/xgmtool
 WAVTORAW = $(TOOLSBIN)/wavtoraw
@@ -28,7 +29,7 @@ ifeq ($(OS),Windows_NT)
 	LTO_SO = liblto_plugin-0.dll
 endif
 
-INCS     = -Isrc -Ires -Iinc
+INCS     = -Isrc -Ires -Ires/video -Iinc
 LIBS     = -L$(MARSDEV)/m68k-elf/lib/gcc/m68k-elf/$(GCC_VER) -lgcc
 CCFLAGS  = -m68000 -Wall -Wextra -std=c99 -fno-builtin -fshort-enums
 OPTIONS  = 
@@ -36,9 +37,10 @@ ASFLAGS  = -m68000 --register-prefix-optional
 LDFLAGS  = -T $(MARSDEV)/ldscripts/sgdk.ld -nostdlib
 Z80FLAGS = -isrc/xgm
 
-RESS  = res/resources.res
+RESS  = res/resources.res res/video/video.res
 Z80S  = $(wildcard src/xgm/*.s80)
 CS    = $(wildcard src/*.c)
+CS   += $(wildcard res/video/*.c)
 SS    = $(wildcard src/*.s)
 OBJS  = $(RESS:.res=.o)
 OBJS += $(Z80S:.s80=.o)
@@ -46,9 +48,12 @@ OBJS += $(CS:.c=.o)
 OBJS += $(SS:.s=.o)
 
 # mdtiler scripts to convert pngs to tilesets and tilemaps
-MDT_SRCS = $(wildcard res/*.mdt)
-MDT_PATS = $(MDT_SRCS:.mdt=.pat)
-MDT_MAPS = $(MDT_SRCS:.mdt=.map)
+MDTS  = $(wildcard res/*.mdt)
+PATS  = $(MDTS:.mdt=.pat)
+MAPS  = $(MDTS:.mdt=.map)
+
+FRAMES = $(wildcard res/video/out16/*.mdt)
+FRAMEO = $(FRAMES:.mdt=.cpat)
 
 .SECONDARY: gold.elf
 
@@ -77,7 +82,7 @@ gold.bin: gold.elf
 	$(OBJC) -O binary $< temp.bin
 	dd if=temp.bin of=$@ bs=8K conv=sync
 
-gold.elf: boot.o $(MDT_PATS) $(OBJS)
+gold.elf: boot.o $(PATS) $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) boot.o $(OBJS) $(LIBS)
 
 %.o: %.c
@@ -97,6 +102,9 @@ gold.elf: boot.o $(MDT_PATS) $(OBJS)
 %.s: %.o80
 	$(BINTOS) $<
 
+%.cpat: %.pat
+	$(LZ4W) "$<" "$@"
+
 %.pat: %.mdt
 	$(MDTILER) $<
 
@@ -104,6 +112,6 @@ gold.elf: boot.o $(MDT_PATS) $(OBJS)
 .PHONY: clean
 
 clean:
-	rm -f $(OBJS) $(MDT_PATS) $(MDT_MAPS)
+	rm -f $(OBJS) $(PATS) $(MAPS) $(FRAMEO)
 	rm -f gold.bin gold.elf temp.bin symbol.txt boot.o
 	rm -f src/xgm/z80_xgm.s src/xgm/z80_xgm.o80 src/xgm/z80_xgm.h out.lst

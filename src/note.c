@@ -43,7 +43,7 @@ typedef struct {
 Note note[MAX_NOTE];
 
 void notes_init() {
-	memset(note, sizeof(Note), MAX_NOTE);
+	for(uint16_t i = MAX_NOTE; --i;) note[i] = (Note) {};
 }
 
 void notes_update() {
