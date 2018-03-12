@@ -55,7 +55,7 @@ MAPS  = $(MDTS:.mdt=.map)
 FRAMES = $(wildcard res/video/out16/*.mdt)
 FRAMEO = $(FRAMES:.mdt=.cpat)
 
-.SECONDARY: gold.elf
+.SECONDARY: gold.elf $(FRAMEO)
 
 .PHONY: all release debug main-build
 
@@ -69,7 +69,7 @@ release: main-build
 debug: OPTIONS = -g -O2 -DDEBUG -DKDEBUG
 debug: main-build
 
-main-build: gold.bin symbol.txt
+main-build: $(PATS) $(FRAMEO) gold.bin symbol.txt
 
 # Cross reference symbol.txt with the addresses displayed in the crash handler
 symbol.txt: gold.bin
@@ -82,7 +82,7 @@ gold.bin: gold.elf
 	$(OBJC) -O binary $< temp.bin
 	dd if=temp.bin of=$@ bs=8K conv=sync
 
-gold.elf: boot.o $(PATS) $(OBJS)
+gold.elf: boot.o $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) boot.o $(OBJS) $(LIBS)
 
 %.o: %.c
@@ -103,7 +103,7 @@ gold.elf: boot.o $(PATS) $(OBJS)
 	$(BINTOS) $<
 
 %.cpat: %.pat
-	$(LZ4W) "$<" "$@"
+	$(LZ4W) p "$<" "$@" -s
 
 %.pat: %.mdt
 	$(MDTILER) $<
@@ -112,6 +112,6 @@ gold.elf: boot.o $(PATS) $(OBJS)
 .PHONY: clean
 
 clean:
-	rm -f $(OBJS) $(PATS) $(MAPS) $(FRAMEO)
+	rm -f $(OBJS) $(PATS) $(MAPS)
 	rm -f gold.bin gold.elf temp.bin symbol.txt boot.o
 	rm -f src/xgm/z80_xgm.s src/xgm/z80_xgm.o80 src/xgm/z80_xgm.h out.lst
