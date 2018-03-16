@@ -55,8 +55,6 @@ MAPS  = $(MDTS:.mdt=.map)
 FRAMES = $(wildcard res/video/out16/*.mdt)
 FRAMEO = $(FRAMES:.mdt=.cpat)
 
-.SECONDARY: gold.elf $(FRAMEO)
-
 .PHONY: all release debug main-build
 
 all: release
@@ -69,7 +67,7 @@ release: main-build
 debug: OPTIONS = -g -O2 -DDEBUG -DKDEBUG
 debug: main-build
 
-main-build: $(PATS) $(FRAMEO) gold.bin symbol.txt
+main-build: gold.bin symbol.txt
 
 # Cross reference symbol.txt with the addresses displayed in the crash handler
 symbol.txt: gold.bin
@@ -82,7 +80,7 @@ gold.bin: gold.elf
 	$(OBJC) -O binary $< temp.bin
 	dd if=temp.bin of=$@ bs=8K conv=sync
 
-gold.elf: boot.o $(OBJS)
+gold.elf: boot.o $(PATS) $(FRAMEO) $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) boot.o $(OBJS) $(LIBS)
 
 %.o: %.c
