@@ -59,6 +59,9 @@ void game() {
 		
 		vdp_vsync();
 		vdp_sprites_update();
+		char str[20];
+		sprintf(str, "%04hu : %02hu : %04hu", c_beat, c_frame, c_subframe);
+		vdp_puts(VDP_PLAN_A, str, 12, 26);
 	}
 }
 

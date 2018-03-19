@@ -80,5 +80,6 @@ void note_create(uint8_t column) {
 			.attr = COLOR_DATA[color].attr,
 		};
 		note[i].live = TRUE;
+		break;
 	}
 }
