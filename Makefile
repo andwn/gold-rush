@@ -37,7 +37,7 @@ ASFLAGS  = -m68000 --register-prefix-optional
 LDFLAGS  = -T $(MARSDEV)/ldscripts/sgdk.ld -nostdlib
 Z80FLAGS = -isrc/xgm
 
-RESS  = res/resources.res res/video/video.res
+RESS  = res/resources.res
 Z80S  = $(wildcard src/xgm/*.s80)
 CS    = $(wildcard src/*.c)
 CS   += $(wildcard res/video/*.c)
@@ -52,8 +52,8 @@ MDTS  = $(wildcard res/*.mdt)
 PATS  = $(MDTS:.mdt=.pat)
 MAPS  = $(MDTS:.mdt=.map)
 
-FRAMES = $(wildcard res/video/out16/*.mdt)
-FRAMEO = $(FRAMES:.mdt=.cpat)
+#FRAMES = $(wildcard res/video/out16/*.mdt)
+#FRAMEO = $(FRAMES:.mdt=.cpat)
 
 .PHONY: all release debug main-build
 
@@ -80,7 +80,7 @@ gold.bin: gold.elf
 	$(OBJC) -O binary $< temp.bin
 	dd if=temp.bin of=$@ bs=8K conv=sync
 
-gold.elf: boot.o $(PATS) $(FRAMEO) $(OBJS)
+gold.elf: boot.o $(PATS) $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) boot.o $(OBJS) $(LIBS)
 
 %.o: %.c
@@ -112,4 +112,4 @@ gold.elf: boot.o $(PATS) $(FRAMEO) $(OBJS)
 clean:
 	rm -f $(OBJS) $(PATS) $(MAPS)
 	rm -f gold.bin gold.elf temp.bin symbol.txt boot.o
-	rm -f src/xgm/z80_xgm.s src/xgm/z80_xgm.o80 src/xgm/z80_xgm.h out.lst
+	rm -f src/xgm/pcm_drv.s src/xgm/pcm_drv.o80 src/xgm/pcm_drv.h out.lst

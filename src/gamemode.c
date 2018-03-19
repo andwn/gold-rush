@@ -4,7 +4,7 @@
 #include "note.h"
 #include "stdlib.h"
 #include "vdp.h"
-#include "xgm.h"
+#include "pcm.h"
 #include "resources.h"
 
 #include "gamemode.h"
@@ -27,7 +27,6 @@ void splash() {
 		joy_update();
 		if(!--splash_time) break;
 		vdp_vsync();
-		xgm_vblank();
 	}
 	gamemode = GM_GAME;
 }
@@ -45,13 +44,12 @@ void game() {
 	vdp_load_tiles(PAT_Notes, TILE_NOTEINDEX, sizeof(PAT_Notes) / 32);
 	// Layout/note and video palettes
 	vdp_set_colors(0, PAL_Layout.data, 16);
-	vdp_set_colors(16, PAL_Video.data, 16);
+	//vdp_set_colors(16, PAL_Video.data, 16);
 	
 	beatmap_init();
 	notes_init();
 	
-	xgm_pcm_set(0x81, PCM_GoldRush, sizeof(PCM_GoldRush));
-	xgm_pcm_play(0x81, 5, 0);
+	pcm_play(PCM_GoldRush, sizeof(PCM_GoldRush));
 	
 	while(TRUE) {
 		joy_update();
@@ -60,7 +58,6 @@ void game() {
 		notes_update();
 		
 		vdp_vsync();
-		xgm_vblank();
 		vdp_sprites_update();
 	}
 }

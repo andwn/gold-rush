@@ -3,14 +3,14 @@
 #include "joy.h"
 #include "stdlib.h"
 #include "vdp.h"
-#include "xgm.h"
+#include "pcm.h"
 
 int main() {
 	mem_init();
 	vdp_init();
 	vdp_reset();
 	joy_init();
-	xgm_init();
+	pcm_init();
 	
 	gamemode = GM_SPLASH;
 	while(TRUE) {
