@@ -11,7 +11,7 @@
 #youtube-dl oe87rrr8rO0 -o video.mp4
 
 # extract the audio
-ffmpeg -y -ss 00:00:02.800 -i video.mp4 -to 00:01:34.800 \
+ffmpeg -y -ss 00:00:00.200 -i video.mp4 -to 00:01:35.000 \
 	-acodec pcm_s8 -f s8 -ac 1 -ar 22050 audio.pcm
 
 # resize & split the video

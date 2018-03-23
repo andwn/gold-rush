@@ -5,25 +5,37 @@
 
 #include "beatmap.h"
 
-static uint8_t beatmap[BEATMAP_LEN];
+static const uint8_t beatmap[BEATMAP_LEN];
+
+// Active timers for track
+static uint16_t c_beat;
+static uint16_t c_frame;
+static uint16_t c_subframe;
+// Speed at which to increment timers
+static uint16_t s_frames;
+static uint16_t s_subframes;
+// Active timer for side bar
+static uint16_t c_sidebar_pos;
+static uint16_t c_sidebar_frame;
+// Number of frames between moving it
+static uint16_t s_sidebar_frames;
 
 void beatmap_init() {
 	c_beat = c_frame = c_subframe = 0;
+	c_sidebar_pos = c_sidebar_frame = 0;
 	// GOLD RUSH is 162 bpm, each beat is 22.2222 or 18.1582 frames
-	//s_frames = vdp_get_palmode() ? 18 : 22;
-	//s_subframes = vdp_get_palmode() ? 1582 : 2222;
 	// but apparently a beat is 4 rows... so 5.5556 / 4.2696
-	//s_frames = vdp_get_palmode() ? 4 : 5;
-	//s_subframes = vdp_get_palmode() ? 2696 : 5556;
-	// no that's too fast I guess BPM means jack shit
-	s_frames = vdp_get_palmode() ? 6 : 8;
-	s_subframes = vdp_get_palmode() ? 6667 : 0;
+	s_frames = vdp_get_palmode() ? 4 : 5;
+	//s_subframes = vdp_get_palmode() ? 74074074 : 111111111;
+	s_subframes = vdp_get_palmode() ? 741 : 1000;
+	// For the side bar, it moves down 1 pixel every 6.4 beats
+	s_sidebar_frames = (s_frames * 6) + (s_frames / 2);
 }
 
 static void do_row(uint16_t index) {
 	uint8_t row = beatmap[BEATMAP_LEN - index];
-	for(uint8_t mask = NOTE_SCRATCH; mask; mask >>= 1) {
-		if(row & mask) note_create(mask);
+	for(uint8_t type = 8; type--;) {
+		if(row & (1 << type)) note_create(type);
 	}
 }
 
@@ -33,16 +45,33 @@ void beatmap_update() {
 	c_subframe += s_subframes;
 	if(c_subframe > 9999) {
 		c_subframe -= 10000;
-		c_frame++;
+		c_frame--;
 	}
 	if(c_frame >= s_frames) {
 		c_frame -= s_frames;
-		c_beat++;
+		if(c_beat < BEATMAP_LEN) c_beat++;
 		do_row(c_beat);
 	}
+	// Draw progress thingy on the left
+	c_sidebar_frame++;
+	if(c_sidebar_frame >= s_sidebar_frames) {
+		c_sidebar_frame -= s_sidebar_frames;
+		if(c_sidebar_pos < 160) c_sidebar_pos++;
+	}
+	VDPSprite thingy = (VDPSprite) {
+		.x = 0x80 + 16, .y = 0x80 + 8 + c_sidebar_pos,
+		.attr = TILE_NOTEINDEX + 7, .size = SPRITE_SIZE(1,1)
+	};
+	vdp_sprites_add(&thingy, 1);
 }
 
-static uint8_t beatmap[BEATMAP_LEN] = {
+void beatmap_draw_debug() {
+	char str[24];
+	sprintf(str, "%04hu : %02hu : %04hu", c_beat, c_frame, c_subframe);
+	vdp_puts(VDP_PLAN_A, str, 12, 26);
+}
+
+static const uint8_t beatmap[BEATMAP_LEN] = {
 	/* 64 */
 	0b00000000,
 	0b00000000,

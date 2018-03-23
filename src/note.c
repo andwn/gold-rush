@@ -1,29 +1,32 @@
 #include "common.h"
+#include "joy.h"
 #include "stdlib.h"
 #include "vdp.h"
 
 #include "note.h"
 
-#define NOTE_SPEED		(2)
-#define NOTE_CREATE_Y	(0x80 + 16)
-#define NOTE_EARLY_Y	(0x80 + 180)
-#define NOTE_PERFECT_Y	(0x80 + 182)
-#define NOTE_LATE_Y		(0x80 + 184)
+#define NOTE_SFT		(4)						// Fixed point shift
+#define NOTE_SPEED		(0x28)					// Falling speed
+#define JUDGEMENT_LINE	(172 << NOTE_SFT)
+#define PERFECT_RANGE	(6 << NOTE_SFT)
+#define CLOSE_RANGE		(9 << NOTE_SFT)
+#define POOR_RANGE		(12 << NOTE_SFT)
 
 enum { COLOR_RED, COLOR_WHITE, COLOR_BLUE };
 
 static const struct {
 	int16_t x;
-	uint8_t color;
+	uint16_t color;
+	uint16_t button;
 } NOTE_DATA[8] = { 
-	{ 0x80 + 24,  COLOR_RED },
-	{ 0x80 + 48,  COLOR_WHITE },
-	{ 0x80 + 64,  COLOR_BLUE },
-	{ 0x80 + 76,  COLOR_WHITE },
-	{ 0x80 + 92,  COLOR_BLUE },
-	{ 0x80 + 104, COLOR_WHITE },
-	{ 0x80 + 120, COLOR_BLUE },
-	{ 0x80 + 132, COLOR_WHITE },
+	{ 0x80 + 24,  COLOR_RED,   BTN_DIR },
+	{ 0x80 + 48,  COLOR_WHITE, BTN_START },
+	{ 0x80 + 64,  COLOR_BLUE,  BTN_X },
+	{ 0x80 + 76,  COLOR_WHITE, BTN_A },
+	{ 0x80 + 92,  COLOR_BLUE,  BTN_Y },
+	{ 0x80 + 104, COLOR_WHITE, BTN_B },
+	{ 0x80 + 120, COLOR_BLUE,  BTN_Z },
+	{ 0x80 + 132, COLOR_WHITE, BTN_C },
 };
 
 static const struct {
@@ -39,47 +42,61 @@ static const struct {
 typedef struct {
 	VDPSprite sprite;
 	uint16_t live;
+	uint16_t y_pos;
+	uint16_t button;
 } Note;
 Note note[MAX_NOTE];
 
 void notes_init() {
+	perfect_hits = close_hits = poor_hits = misses = 0;
 	for(uint16_t i = MAX_NOTE; --i;) note[i] = (Note) {};
 }
 
 void notes_update() {
 	for(uint16_t i = 0; i < MAX_NOTE; i++) {
 		if(!note[i].live) continue;
-		note[i].sprite.y += NOTE_SPEED;
-		if(note[i].sprite.y > NOTE_LATE_Y) {
-			note[i].live = FALSE; // Delete note
+		note[i].y_pos += NOTE_SPEED;
+		if(note[i].y_pos >= JUDGEMENT_LINE + POOR_RANGE) {
+			// Miss
+			misses++;
+			note[i].live = FALSE;
+		} else if(joy_press(note[i].button) && note[i].y_pos >= JUDGEMENT_LINE - POOR_RANGE) {
+			if(note[i].y_pos >= JUDGEMENT_LINE - PERFECT_RANGE 
+					&& note[i].y_pos <= JUDGEMENT_LINE + PERFECT_RANGE) {
+				// Perfect hit
+				perfect_hits++;
+				note[i].live = FALSE;
+			} else if(note[i].y_pos >= JUDGEMENT_LINE - CLOSE_RANGE 
+					&& note[i].y_pos <= JUDGEMENT_LINE + CLOSE_RANGE) {
+				// Close hit
+				close_hits++;
+				note[i].live = FALSE;
+			} else if(note[i].y_pos >= JUDGEMENT_LINE - POOR_RANGE 
+					&& note[i].y_pos <= JUDGEMENT_LINE + POOR_RANGE) {
+				// Poor hit
+				poor_hits++;
+				note[i].live = FALSE;
+			}
 		} else {
+			note[i].sprite.y = 0x80 + (note[i].y_pos >> NOTE_SFT);
 			vdp_sprites_add(&note[i].sprite, 1);
 		}
 	}
 }
 
-void note_create(uint8_t column) {
+void note_create(uint8_t type) {
 	for(uint16_t i = 0; i < MAX_NOTE; i++) {
-		if(note[i].live) continue;
-		uint8_t index = 0, color = 0;
-		switch(column) {
-			case NOTE_SCRATCH: index = 0; break;
-			case NOTE_ST:      index = 1; break;
-			case NOTE_X:       index = 2; break;
-			case NOTE_A:       index = 3; break;
-			case NOTE_Y:       index = 4; break;
-			case NOTE_B:       index = 5; break;
-			case NOTE_Z:       index = 6; break;
-			case NOTE_C:       index = 7; break;
+		if(!note[i].live) {
+			uint8_t color = NOTE_DATA[type].color;
+			note[i].sprite = (VDPSprite) {
+				.x = NOTE_DATA[type].x, .y = 0,
+				.size = COLOR_DATA[color].size,
+				.attr = COLOR_DATA[color].attr,
+			};
+			note[i].live = TRUE;
+			note[i].y_pos = 0;
+			note[i].button = NOTE_DATA[type].button;
+			break;
 		}
-		color = NOTE_DATA[index].color;
-		note[i].sprite = (VDPSprite) {
-			.x = NOTE_DATA[index].x,
-			.y = NOTE_CREATE_Y,
-			.size = COLOR_DATA[color].size,
-			.attr = COLOR_DATA[color].attr,
-		};
-		note[i].live = TRUE;
-		break;
 	}
 }
