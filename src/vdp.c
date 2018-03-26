@@ -34,6 +34,8 @@ void vdp_init() {
 	*vdp_ctrl_port = 0x9001; // Map size (64x32)
 	*vdp_ctrl_port = 0x9100; // Window X
 	*vdp_ctrl_port = 0x9200; // Window Y
+	
+	pal_mode = vdp_get_palmode();
 }
 
 void vdp_reset() {

@@ -52,6 +52,8 @@ typedef struct {
     int16_t x;
 } VDPSprite;
 
+uint16_t pal_mode;
+
 void vdp_init();
 void vdp_reset();
 

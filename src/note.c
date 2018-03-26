@@ -8,9 +8,13 @@
 #define NOTE_SFT		(4)						// Fixed point shift
 #define NOTE_SPEED		(0x28)					// Falling speed
 #define JUDGEMENT_LINE	(172 << NOTE_SFT)
-#define PERFECT_RANGE	(6 << NOTE_SFT)
-#define CLOSE_RANGE		(9 << NOTE_SFT)
-#define POOR_RANGE		(12 << NOTE_SFT)
+#define RANGE_PGREAT	(3 << NOTE_SFT)
+#define RANGE_GREAT		(6 << NOTE_SFT)
+#define RANGE_GOOD		(9 << NOTE_SFT)
+#define RANGE_BAD		(12 << NOTE_SFT)
+#define RANGE_POOR		(15 << NOTE_SFT)
+
+static uint16_t hits_pgreat, hits_great, hits_good, hits_bad, hits_poor;
 
 enum { COLOR_RED, COLOR_WHITE, COLOR_BLUE };
 
@@ -48,40 +52,55 @@ typedef struct {
 Note note[MAX_NOTE];
 
 void notes_init() {
-	perfect_hits = close_hits = poor_hits = misses = 0;
+	hits_pgreat = hits_great = hits_good = hits_bad = hits_poor = 0;
 	for(uint16_t i = MAX_NOTE; --i;) note[i] = (Note) {};
 }
+
+#define IN_RANGE(y, range) \
+	(y >= JUDGEMENT_LINE - range && y <= JUDGEMENT_LINE + range)
 
 void notes_update() {
 	for(uint16_t i = 0; i < MAX_NOTE; i++) {
 		if(!note[i].live) continue;
 		note[i].y_pos += NOTE_SPEED;
-		if(note[i].y_pos >= JUDGEMENT_LINE + POOR_RANGE) {
-			// Miss
-			misses++;
+		if(note[i].y_pos >= JUDGEMENT_LINE + RANGE_POOR) {
+			// Missed
+			hits_poor++;
 			note[i].live = FALSE;
-		} else if(joy_press(note[i].button) && note[i].y_pos >= JUDGEMENT_LINE - POOR_RANGE) {
-			if(note[i].y_pos >= JUDGEMENT_LINE - PERFECT_RANGE 
-					&& note[i].y_pos <= JUDGEMENT_LINE + PERFECT_RANGE) {
-				// Perfect hit
-				perfect_hits++;
+		} else if(joy_press(note[i].button) && note[i].y_pos >= JUDGEMENT_LINE - RANGE_POOR) {
+			if(IN_RANGE(note[i].y_pos, RANGE_PGREAT)) {
+				// Perfect
+				hits_pgreat++;
 				note[i].live = FALSE;
-			} else if(note[i].y_pos >= JUDGEMENT_LINE - CLOSE_RANGE 
-					&& note[i].y_pos <= JUDGEMENT_LINE + CLOSE_RANGE) {
-				// Close hit
-				close_hits++;
+			} else if(IN_RANGE(note[i].y_pos, RANGE_GREAT)) {
+				// Great
+				hits_great++;
 				note[i].live = FALSE;
-			} else if(note[i].y_pos >= JUDGEMENT_LINE - POOR_RANGE 
-					&& note[i].y_pos <= JUDGEMENT_LINE + POOR_RANGE) {
-				// Poor hit
-				poor_hits++;
+			} else if(IN_RANGE(note[i].y_pos, RANGE_GOOD)) {
+				// Good
+				hits_good++;
+				note[i].live = FALSE;
+			} else if(IN_RANGE(note[i].y_pos, RANGE_BAD)) {
+				// Bad
+				hits_bad++;
+				note[i].live = FALSE;
+			} else if(IN_RANGE(note[i].y_pos, RANGE_POOR)) {
+				// Poor
+				hits_poor++;
 				note[i].live = FALSE;
 			}
 		} else {
 			note[i].sprite.y = 0x80 + (note[i].y_pos >> NOTE_SFT);
-			vdp_sprites_add(&note[i].sprite, 1);
+			if(note[i].y_pos <= JUDGEMENT_LINE) vdp_sprites_add(&note[i].sprite, 1);
 		}
 	}
+}
+
+void notes_draw_score() {
+	char str[40];
+	sprintf(str, "%04hu  %04hu  %04hu  %04hu  %04hu",
+			hits_pgreat, hits_great, hits_good, hits_bad, hits_poor);
+	vdp_puts(VDP_PLAN_A, str, 2, 26);
 }
 
 void note_create(uint8_t type) {

@@ -27,7 +27,7 @@ void beatmap_init() {
 	// but apparently a beat is 4 rows... so 5.5556 / 4.2696
 	s_frames = vdp_get_palmode() ? 4 : 5;
 	//s_subframes = vdp_get_palmode() ? 74074074 : 111111111;
-	s_subframes = vdp_get_palmode() ? 741 : 1000;
+	s_subframes = vdp_get_palmode() ? 700 : 1010;
 	// For the side bar, it moves down 1 pixel every 6.4 beats
 	s_sidebar_frames = (s_frames * 6) + (s_frames / 2);
 }
@@ -68,7 +68,7 @@ void beatmap_update() {
 void beatmap_draw_debug() {
 	char str[24];
 	sprintf(str, "%04hu : %02hu : %04hu", c_beat, c_frame, c_subframe);
-	vdp_puts(VDP_PLAN_A, str, 12, 26);
+	vdp_puts(VDP_PLAN_A, str, 18, 26);
 }
 
 static const uint8_t beatmap[BEATMAP_LEN] = {

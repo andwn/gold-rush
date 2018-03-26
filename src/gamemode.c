@@ -2,9 +2,10 @@
 #include "beatmap.h"
 #include "joy.h"
 #include "note.h"
+#include "pcm.h"
 #include "stdlib.h"
 #include "vdp.h"
-#include "pcm.h"
+#include "video.h"
 #include "resources.h"
 
 #include "gamemode.h"
@@ -42,10 +43,12 @@ void game() {
 	}
 	// Note tiles
 	vdp_load_tiles(PAT_Notes, TILE_NOTEINDEX, sizeof(PAT_Notes) / 32);
+	vdp_puts(VDP_PLAN_A, "Piss  Great Good  Bad   Poor", 2, 25);
 	// Layout/note and video palettes
 	vdp_set_colors(0, PAL_Layout.data, 16);
 	//vdp_set_colors(16, PAL_Video.data, 16);
 	
+	video_init();
 	beatmap_init();
 	notes_init();
 	
@@ -59,6 +62,8 @@ void game() {
 		
 		vdp_vsync();
 		vdp_sprites_update();
+		video_update();
+		notes_draw_score();
 		//beatmap_draw_debug();
 	}
 }

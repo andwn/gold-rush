@@ -16,7 +16,10 @@ ffmpeg -y -ss 00:00:00.200 -i video.mp4 -to 00:01:35.000 \
 
 # resize & split the video
 #ffmpeg -ss 00:00:02.000 -i video.mp4 -to 00:01:34.000 \
-#	-vf fps=12,scale=128x96 out/%04d.png
+#	-vf fps=12,scale=144x112 out/%04d.png
+
+# 16 color versions
+#convert out/*.png -remap ../colormap.png -colors 16 out16/%04d.png
 
 # combine into one big vertically stacked image
 #montage -geometry +0+0 out/*.png -tile 8x142 combined.png

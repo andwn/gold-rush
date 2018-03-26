@@ -2,4 +2,5 @@
 
 void beatmap_init();
 void beatmap_update();
+void beatmap_draw_score();
 void beatmap_draw_debug();
