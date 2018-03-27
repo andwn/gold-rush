@@ -91,7 +91,9 @@ void notes_update() {
 			}
 		} else {
 			note[i].sprite.y = 0x80 + (note[i].y_pos >> NOTE_SFT);
-			if(note[i].y_pos <= JUDGEMENT_LINE) vdp_sprites_add(&note[i].sprite, 1);
+			if(note[i].y_pos < JUDGEMENT_LINE + RANGE_PGREAT) {
+				vdp_sprites_add(&note[i].sprite, 1);
+			}
 		}
 	}
 }
