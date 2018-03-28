@@ -126,7 +126,7 @@ static const Image images[NUM_IMAGES] = {
 static const Frame frames[ANIM_LEN] = {
 	{1,1}, 
 	// Logo
-	{60,1},
+	{600,1},
 	// Make money
 	{30,4},{30,5},{30,6},
 	// Scrolling GOLD

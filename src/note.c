@@ -14,7 +14,10 @@
 #define RANGE_BAD		(12 << NOTE_SFT)
 #define RANGE_POOR		(15 << NOTE_SFT)
 
-static uint16_t hits_pgreat, hits_great, hits_good, hits_bad, hits_poor;
+enum { PGREAT, GREAT, GOOD, BAD, POOR };
+
+static uint16_t hits[5], old_hits[5];
+static uint16_t bar_percent, bar_sub, old_percent;
 
 enum { COLOR_RED, COLOR_WHITE, COLOR_BLUE };
 
@@ -52,42 +55,47 @@ typedef struct {
 Note note[MAX_NOTE];
 
 void notes_init() {
-	hits_pgreat = hits_great = hits_good = hits_bad = hits_poor = 0;
+	memset(hits, 0, sizeof(hits) << 1);
+	memset(old_hits, 255, sizeof(hits) << 1);
+	bar_percent = bar_sub = 0;
+	old_percent = 255;
 	for(uint16_t i = MAX_NOTE; --i;) note[i] = (Note) {};
 }
 
-#define IN_RANGE(y, range) \
-	(y >= JUDGEMENT_LINE - range && y <= JUDGEMENT_LINE + range)
+static inline uint16_t in_range(int16_t y, int16_t range) {
+	return y >= JUDGEMENT_LINE - range && y <= JUDGEMENT_LINE + range;
+}
+
+static void note_hit(Note *n, uint16_t type) {
+	hits[type]++;
+	n->live = FALSE;
+	if(type != POOR) {
+		if(++bar_sub >= 2) {
+			bar_sub = 0;
+			if(++bar_percent > 100) bar_percent = 100;
+		}
+	} else {
+		if(bar_percent > 0) bar_percent--;
+	}
+}
 
 void notes_update() {
 	for(uint16_t i = 0; i < MAX_NOTE; i++) {
 		if(!note[i].live) continue;
 		note[i].y_pos += NOTE_SPEED;
 		if(note[i].y_pos >= JUDGEMENT_LINE + RANGE_POOR) {
-			// Missed
-			hits_poor++;
-			note[i].live = FALSE;
+			note_hit(&note[i], POOR); // Missed
 		} else if(joy_press(note[i].button) && note[i].y_pos >= JUDGEMENT_LINE - RANGE_POOR) {
-			if(IN_RANGE(note[i].y_pos, RANGE_PGREAT)) {
-				// Perfect
-				hits_pgreat++;
-				note[i].live = FALSE;
-			} else if(IN_RANGE(note[i].y_pos, RANGE_GREAT)) {
-				// Great
-				hits_great++;
-				note[i].live = FALSE;
-			} else if(IN_RANGE(note[i].y_pos, RANGE_GOOD)) {
-				// Good
-				hits_good++;
-				note[i].live = FALSE;
-			} else if(IN_RANGE(note[i].y_pos, RANGE_BAD)) {
-				// Bad
-				hits_bad++;
-				note[i].live = FALSE;
-			} else if(IN_RANGE(note[i].y_pos, RANGE_POOR)) {
-				// Poor
-				hits_poor++;
-				note[i].live = FALSE;
+			if(in_range(note[i].y_pos, RANGE_PGREAT)) {
+				note_hit(&note[i], PGREAT);
+			} else if(in_range(note[i].y_pos, RANGE_GREAT)) {
+				note_hit(&note[i], GREAT);
+			} else if(in_range(note[i].y_pos, RANGE_GOOD)) {
+				note_hit(&note[i], GOOD);
+			} else if(in_range(note[i].y_pos, RANGE_BAD)) {
+				note_hit(&note[i], BAD);
+			} else if(in_range(note[i].y_pos, RANGE_POOR)) {
+				note_hit(&note[i], POOR);
 			}
 		} else {
 			note[i].sprite.y = 0x80 + (note[i].y_pos >> NOTE_SFT);
@@ -100,9 +108,20 @@ void notes_update() {
 
 void notes_draw_score() {
 	char str[40];
-	sprintf(str, "%04hu  %04hu  %04hu  %04hu  %04hu",
-			hits_pgreat, hits_great, hits_good, hits_bad, hits_poor);
-	vdp_puts(VDP_PLAN_A, str, 2, 26);
+	uint16_t x = 2;
+	for(uint16_t i = 0; i < 5; i++) {
+		if(old_hits[i] != hits[i]) {
+			sprintf(str, "%4hu", hits[i]);
+			vdp_puts(VDP_PLAN_A, str, x, 26);
+			old_hits[i] = hits[i];
+		}
+		x += 6;
+	}
+	if(old_percent != bar_percent) {
+		sprintf(str, "%3hu", bar_percent);
+		vdp_puts(VDP_PLAN_A, str, 17, 23);
+		old_percent = bar_percent;
+	}
 }
 
 void note_create(uint8_t type) {
