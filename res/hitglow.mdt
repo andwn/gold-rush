@@ -1,0 +1,5 @@
+input res/hitglow3.png
+output res/hitglow.pat
+
+layout sprite
+tiles 0 0 8 8

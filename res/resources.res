@@ -1,6 +1,7 @@
 # Palettes
 PALETTE PAL_Money	"moneymaking.png"
 PALETTE PAL_Layout	"layout.png"
+PALETTE PAL_Words	"hitwords.png"
 
 # Font & Intro graphic
 TILESET	TS_SysFont	"font.png" 			0
@@ -12,6 +13,8 @@ BIN MAP_Layout		"layout.map"
 
 # Sprite patterns
 BIN PAT_Notes		"notes.pat"
+BIN PAT_Words		"hitwords.pat"
+BIN PAT_Glow		"hitglow.pat"
 
 # Audio
 #BIN stop_xgm		"stop_xgm.bin"
