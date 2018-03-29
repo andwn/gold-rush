@@ -10,8 +10,8 @@ static volatile uint32_t* const vdp_ctrl_wide = (uint32_t*) 0xC00004;
 
 static uint16_t v_spritecount;
 static VDPSprite v_spritetablebuffer[80];
-static uint16_t font_index;
-static uint16_t font_pal;
+//static uint16_t font_index;
+//static uint16_t font_pal;
 
 void vdp_init() {
 	// Set the registers
@@ -35,7 +35,7 @@ void vdp_init() {
 	*vdp_ctrl_port = 0x9100; // Window X
 	*vdp_ctrl_port = 0x9200; // Window Y
 	
-	pal_mode = vdp_get_palmode();
+	pal_mode = *vdp_ctrl_port & 1;
 }
 
 void vdp_reset() {
@@ -51,8 +51,7 @@ void vdp_reset() {
 	vdp_sprites_clear();
 	vdp_sprites_update();
 	// (Re)load the font
-	vdp_load_font(TILE_FONTINDEX);
-	vdp_font_pal(0);
+	vdp_load_font();
 	vdp_set_color(1, 0x000);
 	vdp_set_color(15, 0xEEE);
 }
@@ -73,10 +72,6 @@ void vdp_set_scrollmode(uint8_t hoz, uint8_t vert) {
 
 void vdp_set_highlight(uint8_t enabled) {
 	*vdp_ctrl_port = 0x8C81 | (enabled << 3);
-}
-
-uint16_t vdp_get_palmode() {
-	return *vdp_ctrl_port & 1;
 }
 
 void vdp_vsync() {
@@ -228,14 +223,8 @@ void vdp_sprites_update() {
 
 // Font / Text
 
-void vdp_load_font(uint16_t index) {
-	font_index = index;
-	font_pal = 0;
-	vdp_load_tiles(TS_SysFont.tiles, font_index, 0x60);
-}
-
-void vdp_font_pal(uint16_t pal) {
-	font_pal = pal;
+void vdp_load_font() {
+	vdp_load_tiles(TS_SysFont.tiles, TILE_FONTINDEX, 0x60);
 }
 
 void vdp_puts(uint16_t plan, const char *str, uint16_t x, uint16_t y) {
@@ -248,7 +237,7 @@ void vdp_puts(uint16_t plan, const char *str, uint16_t x, uint16_t y) {
 			addr -= x << 1;
 			*vdp_ctrl_wide = ((0x4000 + ((addr) & 0x3FFF)) << 16) + (((addr) >> 14) | 0x00);
 		}
-		uint16_t attr = TILE_ATTR(font_pal,1,0,0,font_index + *str++ - 0x20);
+		uint16_t attr = TILE_ATTR(0,1,0,0,TILE_FONTINDEX + *str++ - 0x20);
 		*vdp_data_port = attr;
 	}
 }

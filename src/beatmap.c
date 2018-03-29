@@ -25,9 +25,9 @@ void beatmap_init() {
 	c_sidebar_pos = c_sidebar_frame = 0;
 	// GOLD RUSH is 162 bpm, each beat is 22.2222 or 18.1582 frames
 	// but apparently a beat is 4 rows... so 5.5556 / 4.2696
-	s_frames = vdp_get_palmode() ? 4 : 5;
+	s_frames = pal_mode ? 4 : 5;
 	//s_subframes = vdp_get_palmode() ? 74074074 : 111111111;
-	s_subframes = vdp_get_palmode() ? 700 : 1010;
+	s_subframes = pal_mode ? 700 : 1010;
 	// For the side bar, it moves down 1 pixel every 6.4 beats
 	s_sidebar_frames = (s_frames * 6) + (s_frames / 2);
 }
