@@ -1,5 +1,6 @@
 #include "common.h"
 #include "beatmap.h"
+#include "effect.h"
 #include "joy.h"
 #include "note.h"
 #include "pcm.h"
@@ -44,6 +45,7 @@ void game() {
 	// Note tiles
 	vdp_load_tiles(PAT_Notes, TILE_NOTEINDEX, sizeof(PAT_Notes) / 32);
 	vdp_load_tiles(PAT_Glow, TILE_EXTRA2INDEX, sizeof(PAT_Glow) / 32);
+	vdp_load_tiles(PAT_Words, 0x300, sizeof(PAT_Words) / 32);
 	vdp_puts(VDP_PLAN_A, "Piss  Great Good  Bad   Poor", 2, 25);
 	// Layout/note and video palettes
 	vdp_set_colors(0, PAL_Layout.data, 16);
@@ -52,6 +54,7 @@ void game() {
 	video_init();
 	beatmap_init();
 	notes_init();
+	effects_init();
 	
 	pcm_play(PCM_GoldRush, sizeof(PCM_GoldRush));
 	
@@ -60,6 +63,7 @@ void game() {
 		
 		beatmap_update();
 		notes_update();
+		effects_update();
 		
 		vdp_vsync();
 		vdp_sprites_update();

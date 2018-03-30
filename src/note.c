@@ -1,4 +1,5 @@
 #include "common.h"
+#include "effect.h"
 #include "joy.h"
 #include "stdlib.h"
 #include "vdp.h"
@@ -8,13 +9,14 @@
 #define NOTE_SFT		(4)						// Fixed point shift
 #define NOTE_SPEED		(0x28)					// Falling speed
 #define JUDGEMENT_LINE	(172 << NOTE_SFT)
-#define RANGE_PGREAT	(3 << NOTE_SFT)
-#define RANGE_GREAT		(6 << NOTE_SFT)
-#define RANGE_GOOD		(9 << NOTE_SFT)
-#define RANGE_BAD		(12 << NOTE_SFT)
-#define RANGE_POOR		(15 << NOTE_SFT)
-
-enum { PGREAT, GREAT, GOOD, BAD, POOR };
+#define BAD_EARLY		(JUDGEMENT_LINE - NOTE_SPEED * 10)
+#define GOOD_EARLY		(JUDGEMENT_LINE - NOTE_SPEED * 8)
+#define GREAT_EARLY		(JUDGEMENT_LINE - NOTE_SPEED * 3)
+#define PGREAT_EARLY	(JUDGEMENT_LINE - NOTE_SPEED * 1)
+#define PGREAT_LATE		(JUDGEMENT_LINE + NOTE_SPEED * 0)
+#define GREAT_LATE		(JUDGEMENT_LINE + NOTE_SPEED * 1)
+#define GOOD_LATE		(JUDGEMENT_LINE + NOTE_SPEED * 6)
+#define BAD_LATE		(JUDGEMENT_LINE + NOTE_SPEED * 9)
 
 static uint16_t hits[5], old_hits[5];
 static uint16_t bar_percent, bar_sub, old_percent;
@@ -62,10 +64,6 @@ void notes_init() {
 	for(uint16_t i = MAX_NOTE; --i;) note[i] = (Note) {};
 }
 
-static inline uint16_t in_range(int16_t y, int16_t range) {
-	return y >= JUDGEMENT_LINE - range && y <= JUDGEMENT_LINE + range;
-}
-
 static void note_hit(Note *n, uint16_t type) {
 	hits[type]++;
 	n->live = FALSE;
@@ -77,29 +75,26 @@ static void note_hit(Note *n, uint16_t type) {
 	} else {
 		if(bar_percent > 0) bar_percent--;
 	}
+	effect_show_word(type, 50);
 }
 
 void notes_update() {
 	for(uint16_t i = 0; i < MAX_NOTE; i++) {
 		if(!note[i].live) continue;
 		note[i].y_pos += NOTE_SPEED;
-		if(note[i].y_pos >= JUDGEMENT_LINE + RANGE_POOR) {
+		if(note[i].y_pos > BAD_LATE) {
 			note_hit(&note[i], POOR); // Missed
-		} else if(joy_press(note[i].button) && note[i].y_pos >= JUDGEMENT_LINE - RANGE_POOR) {
-			if(in_range(note[i].y_pos, RANGE_PGREAT)) {
-				note_hit(&note[i], PGREAT);
-			} else if(in_range(note[i].y_pos, RANGE_GREAT)) {
-				note_hit(&note[i], GREAT);
-			} else if(in_range(note[i].y_pos, RANGE_GOOD)) {
-				note_hit(&note[i], GOOD);
-			} else if(in_range(note[i].y_pos, RANGE_BAD)) {
-				note_hit(&note[i], BAD);
-			} else if(in_range(note[i].y_pos, RANGE_POOR)) {
-				note_hit(&note[i], POOR);
-			}
+		} else if(joy_press(note[i].button) && note[i].y_pos >= BAD_EARLY) {
+			if     (note[i].y_pos < GOOD_EARLY)   note_hit(&note[i], BAD);
+			else if(note[i].y_pos < GREAT_EARLY)  note_hit(&note[i], GOOD);
+			else if(note[i].y_pos < PGREAT_EARLY) note_hit(&note[i], GREAT);
+			else if(note[i].y_pos <= PGREAT_LATE) note_hit(&note[i], PGREAT);
+			else if(note[i].y_pos <= GREAT_LATE)  note_hit(&note[i], GREAT);
+			else if(note[i].y_pos <= GOOD_LATE)   note_hit(&note[i], GOOD);
+			else if(note[i].y_pos <= BAD_LATE)    note_hit(&note[i], BAD);
 		} else {
 			note[i].sprite.y = 0x80 + (note[i].y_pos >> NOTE_SFT);
-			if(note[i].y_pos < JUDGEMENT_LINE + RANGE_PGREAT) {
+			if(note[i].y_pos < GREAT_LATE) {
 				vdp_sprites_add(&note[i].sprite, 1);
 			}
 		}
@@ -119,7 +114,7 @@ void notes_draw_score() {
 	}
 	if(old_percent != bar_percent) {
 		sprintf(str, "%3hu", bar_percent);
-		vdp_puts(VDP_PLAN_A, str, 17, 23);
+		vdp_puts(VDP_PLAN_A, str, 19, 23);
 		old_percent = bar_percent;
 	}
 }

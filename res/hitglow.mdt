@@ -2,4 +2,11 @@ input res/hitglow3.png
 output res/hitglow.pat
 
 layout sprite
-tiles 0 0 8 8
+tiles 0 0 1 8
+tiles 1 0 1 8
+tiles 2 0 1 8
+tiles 3 0 1 8
+tiles 4 0 1 8
+tiles 5 0 1 8
+tiles 6 0 1 8
+tiles 7 0 1 8
