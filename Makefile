@@ -31,7 +31,7 @@ endif
 
 INCS     = -Isrc -Ires -Ires/video -Iinc
 LIBS     = -L$(MARSDEV)/m68k-elf/lib/gcc/m68k-elf/$(GCC_VER) -lgcc
-CCFLAGS  = -m68000 -Wall -Wextra -std=c99 -fno-builtin -fshort-enums
+CCFLAGS  = -m68000 -Wall -Wextra -std=c99 -ffreestanding -fshort-enums
 OPTIONS  = 
 ASFLAGS  = -m68000 --register-prefix-optional
 LDFLAGS  = -T $(MARSDEV)/ldscripts/sgdk.ld -nostdlib
@@ -42,6 +42,7 @@ Z80S  = $(wildcard src/xgm/*.s80)
 CS    = $(wildcard src/*.c)
 CS   += $(wildcard res/video/*.c)
 SS    = $(wildcard src/*.s)
+SS   += res/video.s
 OBJS  = $(RESS:.res=.o)
 OBJS += $(Z80S:.s80=.o)
 OBJS += $(CS:.c=.o)

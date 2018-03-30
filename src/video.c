@@ -2,6 +2,7 @@
 #include "video.h"
 #include "vdp.h"
 #include "resources.h"
+#include "video_res.h"
 
 #define NUM_IMAGES	44
 #define ANIM_LEN	0x42
@@ -12,7 +13,7 @@
 #define BUF0_INDEX	0x100
 #define BUF1_INDEX	0x200
 
-typedef struct { const TileSet* ts; const Palette* pal; } Image;
+typedef struct { const uint32_t* pat; const Palette* pal; } Image;
 static const Image images[NUM_IMAGES];
 typedef struct { uint16_t time; uint16_t image; } Frame;
 static const Frame frames[ANIM_LEN];
@@ -54,7 +55,7 @@ void video_update() {
 		case DRAW_TILES3: ind += 87; /* fallthrough */
 		case DRAW_TILES2: ind += 88; /* fallthrough */
 		case DRAW_TILES1: {
-			vdp_load_tiles(&img->ts->tiles[ind<<3], draw_buffer + ind, 88);
+			vdp_load_tiles(&img->pat[ind<<3], draw_buffer + ind, 88);
 			draw_status++;
 		}
 		break;
@@ -78,49 +79,49 @@ void video_update() {
 
 static const Image images[NUM_IMAGES] = {
 	{ NULL, NULL },
-	{ &TS_Vid01, &PAL_Vid01 },
-	{ &TS_Vid02, &PAL_Vid02 },
-	{ &TS_Vid03, &PAL_Vid03 },
-	{ &TS_Vid04, &PAL_Vid04 },
-	{ &TS_Vid05, &PAL_Vid05 },
-	{ &TS_Vid06, &PAL_Vid06 },
-	{ &TS_Vid07, &PAL_Vid07 },
-	{ &TS_Vid08, &PAL_Vid08 },
-	{ &TS_Vid09, &PAL_Vid09 },
-	{ &TS_Vid10, &PAL_Vid10 },
-	{ &TS_Vid11, &PAL_Vid11 },
-	{ &TS_Vid12, &PAL_Vid12 },
-	{ &TS_Vid13, &PAL_Vid13 },
-	{ &TS_Vid14, &PAL_Vid14 },
-	{ &TS_Vid15, &PAL_Vid15 },
-	{ &TS_Vid16, &PAL_Vid16 },
-	{ &TS_Vid17, &PAL_Vid17 },
-	{ &TS_Vid18, &PAL_Vid18 },
-	{ &TS_Vid19, &PAL_Vid19 },
-	{ &TS_Vid20, &PAL_Vid20 },
-	{ &TS_Vid21, &PAL_Vid21 },
-	{ &TS_Vid22, &PAL_Vid22 },
-	{ &TS_Vid23, &PAL_Vid23 },
-	{ &TS_Vid24, &PAL_Vid24 },
-	{ &TS_Vid25, &PAL_Vid25 },
-	{ &TS_Vid26, &PAL_Vid26 },
-	{ &TS_Vid27, &PAL_Vid27 },
-	{ &TS_Vid28, &PAL_Vid28 },
-	{ &TS_Vid29, &PAL_Vid29 },
-	{ &TS_Vid30, &PAL_Vid30 },
-	{ &TS_Vid31, &PAL_Vid31 },
-	{ &TS_Vid32, &PAL_Vid32 },
-	{ &TS_Vid33, &PAL_Vid33 },
-	{ &TS_Vid34, &PAL_Vid34 },
-	{ &TS_Vid35, &PAL_Vid35 },
-	{ &TS_Vid36, &PAL_Vid36 },
-	{ &TS_Vid37, &PAL_Vid37 },
-	{ &TS_Vid38, &PAL_Vid38 },
-	{ &TS_Vid39, &PAL_Vid39 },
-	{ &TS_Vid40, &PAL_Vid40 },
-	{ &TS_Vid41, &PAL_Vid41 },
-	{ &TS_Vid42, &PAL_Vid42 },
-	{ &TS_Vid43, &PAL_Vid43 },
+	{ PAT_Vid01, &PAL_Vid01 },
+	{ PAT_Vid02, &PAL_Vid02 },
+	{ PAT_Vid03, &PAL_Vid03 },
+	{ PAT_Vid04, &PAL_Vid04 },
+	{ PAT_Vid05, &PAL_Vid05 },
+	{ PAT_Vid06, &PAL_Vid06 },
+	{ PAT_Vid07, &PAL_Vid07 },
+	{ PAT_Vid08, &PAL_Vid08 },
+	{ PAT_Vid09, &PAL_Vid09 },
+	{ PAT_Vid10, &PAL_Vid10 },
+	{ PAT_Vid11, &PAL_Vid11 },
+	{ PAT_Vid12, &PAL_Vid12 },
+	{ PAT_Vid13, &PAL_Vid13 },
+	{ PAT_Vid14, &PAL_Vid14 },
+	{ PAT_Vid15, &PAL_Vid15 },
+	{ PAT_Vid16, &PAL_Vid16 },
+	{ PAT_Vid17, &PAL_Vid17 },
+	{ PAT_Vid18, &PAL_Vid18 },
+	{ PAT_Vid19, &PAL_Vid19 },
+	{ PAT_Vid20, &PAL_Vid20 },
+	{ PAT_Vid21, &PAL_Vid21 },
+	{ PAT_Vid22, &PAL_Vid22 },
+	{ PAT_Vid23, &PAL_Vid23 },
+	{ PAT_Vid24, &PAL_Vid24 },
+	{ PAT_Vid25, &PAL_Vid25 },
+	{ PAT_Vid26, &PAL_Vid26 },
+	{ PAT_Vid27, &PAL_Vid27 },
+	{ PAT_Vid28, &PAL_Vid28 },
+	{ PAT_Vid29, &PAL_Vid29 },
+	{ PAT_Vid30, &PAL_Vid30 },
+	{ PAT_Vid31, &PAL_Vid31 },
+	{ PAT_Vid32, &PAL_Vid32 },
+	{ PAT_Vid33, &PAL_Vid33 },
+	{ PAT_Vid34, &PAL_Vid34 },
+	{ PAT_Vid35, &PAL_Vid35 },
+	{ PAT_Vid36, &PAL_Vid36 },
+	{ PAT_Vid37, &PAL_Vid37 },
+	{ PAT_Vid38, &PAL_Vid38 },
+	{ PAT_Vid39, &PAL_Vid39 },
+	{ PAT_Vid40, &PAL_Vid40 },
+	{ PAT_Vid41, &PAL_Vid41 },
+	{ PAT_Vid42, &PAL_Vid42 },
+	{ PAT_Vid43, &PAL_Vid43 },
 };
 
 static const Frame frames[ANIM_LEN] = {
