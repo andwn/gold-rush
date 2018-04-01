@@ -24,7 +24,11 @@
 
 // Game specific tile indeces
 #define TILE_LAYOUTINDEX		0x0000
+#define TILE_WORDSINDEX			0x0300
 #define TILE_FONTINDEX			TILE_EXTRA1INDEX
+#define TILE_BARINDEX			(TILE_FONTINDEX + 0x60)
+#define TILE_SPEEDINDEX			(TILE_BARINDEX + 6)
+#define TILE_GLOWINDEX			TILE_EXTRA2INDEX
 #define TILE_NOTEINDEX			TILE_EXTRA3INDEX
 
 #define TILE_ATTR(pal, prio, flipV, flipH, index)                                              \
@@ -76,8 +80,6 @@ void vdp_load_tiles(const void *data, uint16_t index, uint16_t num);
 void vdp_map_set_xy(uint16_t plan, uint16_t tile, uint16_t x, uint16_t y);
 void vdp_map_set_hline(uint16_t plan, const uint16_t *tiles, uint16_t x, uint16_t y, uint16_t len);
 void vdp_map_set_vline(uint16_t plan, const uint16_t *tiles, uint16_t x, uint16_t y, uint16_t len);
-void vdp_map_fill_hline(uint16_t plan, uint16_t tile, uint16_t x, uint16_t y, uint16_t len);
-void vdp_map_fill_vline(uint16_t plan, uint16_t tile, uint16_t x, uint16_t y, uint16_t len);
 void vdp_map_clear(uint16_t plan);
 
 // Palettes

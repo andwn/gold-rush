@@ -1,5 +1,6 @@
 #include "common.h"
 #include "vdp.h"
+#include "tiles_res.h"
 #include "resources.h"
 
 static const uint16_t blank_data[0x80];
@@ -8,10 +9,8 @@ static volatile uint16_t* const vdp_data_port = (uint16_t*) 0xC00000;
 static volatile uint16_t* const vdp_ctrl_port = (uint16_t*) 0xC00004;
 static volatile uint32_t* const vdp_ctrl_wide = (uint32_t*) 0xC00004;
 
-static uint16_t v_spritecount;
-static VDPSprite v_spritetablebuffer[80];
-//static uint16_t font_index;
-//static uint16_t font_pal;
+static uint16_t spr_count;
+static VDPSprite spr_table[80];
 
 void vdp_init() {
 	// Set the registers
@@ -26,7 +25,7 @@ void vdp_init() {
 	*vdp_ctrl_port = 0x8800;
 	*vdp_ctrl_port = 0x8900;
 	*vdp_ctrl_port = 0x8A01; // Horizontal interrupt timer
-	*vdp_ctrl_port = 0x8B00 | (VSCROLL_PLANE << 2) | HSCROLL_TILE; // Scroll mode
+	*vdp_ctrl_port = 0x8B00 | (VSCROLL_PLANE << 2) | HSCROLL_PLANE; // Scroll mode
 	*vdp_ctrl_port = 0x8C81; // No interlace or shadow/highlight
 	*vdp_ctrl_port = 0x8D00 | (VDP_HSCROLL_TABLE >> 10); // HScroll table address
 	*vdp_ctrl_port = 0x8E00;
@@ -82,8 +81,6 @@ void vdp_vsync() {
 // DMA stuff
 
 static void dma_do(uint32_t from, uint16_t len, uint32_t cmd) {
-	// Wait if another DMA is in progress
-	while(*vdp_ctrl_port & 2);
 	// Setup DMA length (in word here)
     *vdp_ctrl_port = 0x9300 + (len & 0xff);
     *vdp_ctrl_port = 0x9400 + ((len >> 8) & 0xff);
@@ -138,24 +135,6 @@ void vdp_map_set_vline(uint16_t plan, const uint16_t *tiles, uint16_t x, uint16_
 	vdp_set_autoinc(2);
 }
 
-void vdp_map_fill_hline(uint16_t plan, uint16_t tile, uint16_t x, uint16_t y, uint16_t len) {
-	uint16_t buf[64];
-	uint16_t addr = plan + ((x + (y << PLAN_WIDTH_SFT)) << 1);
-	if(len > 64) len = 64;
-	for(uint16_t i = 0; i < len; i++) buf[i] = tile;
-	vdp_dma_vram((uint32_t) buf, addr, len);
-}
-
-void vdp_map_fill_vline(uint16_t plan, uint16_t tile, uint16_t x, uint16_t y, uint16_t len) {
-	uint16_t buf[32];
-	uint16_t addr = plan + ((x + (y << PLAN_WIDTH_SFT)) << 1);
-	if(len > 32) len = 32;
-	for(uint16_t i = 0; i < len; i++) buf[i] = tile;
-	vdp_set_autoinc(128);
-	vdp_dma_vram((uint32_t) buf, addr, len);
-	vdp_set_autoinc(2);
-}
-
 void vdp_map_clear(uint16_t plan) {
 	uint16_t addr = plan;
 	while(addr < plan + 0x1000) {
@@ -196,12 +175,12 @@ void vdp_set_vscroll(uint16_t plan, int16_t vscroll) {
 void vdp_sprites_add(const VDPSprite *spr, uint16_t num) {
 	for(uint16_t i = 0; i < num; i++) {
 		// Exceeded max number of sprites
-		if(v_spritecount >= 80) break;
+		if(spr_count >= 80) break;
 		// Prevent drawing off screen sprites
 		if((unsigned)(spr[i].x-96) < 352 && (unsigned)(spr[i].y-96) < 256) {
-			v_spritetablebuffer[v_spritecount] = spr[i];
-			v_spritetablebuffer[v_spritecount].link = v_spritecount + 1;
-			v_spritecount++;
+			spr_table[spr_count] = spr[i];
+			spr_table[spr_count].link = spr_count + 1;
+			spr_count++;
 		}
 	}
 }
@@ -210,21 +189,21 @@ void vdp_sprites_clear() {
 	static const VDPSprite NULL_SPRITE = {
 		.x = 128, .y = 128, .size = SPRITE_SIZE(1,1), .attr = 0
 	};
-	v_spritecount = 0;
+	spr_count = 0;
 	vdp_sprites_add(&NULL_SPRITE, 1);
 }
 
 void vdp_sprites_update() {
-	if(!v_spritecount) return;
-	v_spritetablebuffer[v_spritecount - 1].link = 0; // Mark end of sprite list
-	vdp_dma_vram((uint32_t) v_spritetablebuffer, VDP_SPRITE_TABLE, v_spritecount << 2);
-	v_spritecount = 0;
+	if(!spr_count) return;
+	spr_table[spr_count - 1].link = 0; // Mark end of sprite list
+	vdp_dma_vram((uint32_t) spr_table, VDP_SPRITE_TABLE, spr_count << 2);
+	spr_count = 0;
 }
 
 // Font / Text
 
 void vdp_load_font() {
-	vdp_load_tiles(TS_SysFont.tiles, TILE_FONTINDEX, 0x60);
+	vdp_load_tiles(PAT_Font, TILE_FONTINDEX, 0x60);
 }
 
 void vdp_puts(uint16_t plan, const char *str, uint16_t x, uint16_t y) {

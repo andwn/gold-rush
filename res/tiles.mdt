@@ -1,0 +1,85 @@
+input res/font.png
+output res/font.pat
+
+layout tilemap
+tiles 0 0 16 6
+
+input res/money.png
+output res/money.pat
+
+layout tilemap
+tiles 0 0 7 7
+
+input res/layout.png
+output res/layout.pat
+output2 res/layout.map
+
+layout tilemap
+map 0 0 40 30
+
+input res/notes.png
+output res/notes.pat
+
+layout tilemap
+tiles 0 0 8 1
+
+input res/bar.png
+output res/bar.pat
+
+layout tilemap
+tiles 0 0 6 1
+
+input res/speed.png
+output res/speed.pat
+
+layout tilemap
+tiles 0 0 4 2
+
+input res/easywin.png
+output res/easywin.pat
+
+layout tilemap
+tiles 0 0 38 24
+
+input res/easylose.png
+output res/easylose.pat
+
+layout tilemap
+tiles 0 0 24 27
+
+input res/normalwin.png
+output res/normalwin.pat
+
+layout tilemap
+tiles 0 0 38 22
+
+input res/normallose.png
+output res/normallose.pat
+
+layout tilemap
+tiles 0 0 38 21
+
+input res/glow.png
+output res/glow.pat
+
+layout sprite
+tiles 0 0 1 8
+tiles 1 0 1 8
+tiles 2 0 1 8
+tiles 3 0 1 8
+tiles 4 0 1 8
+tiles 5 0 1 8
+tiles 6 0 1 8
+tiles 7 0 1 8
+
+input res/words.png
+output res/words.pat
+
+layout sprite
+tiles 0 0 10 4
+tiles 0 4 10 4
+tiles 0 8 10 4
+tiles 0 12 10 4
+tiles 0 16 8 4
+tiles 0 20 6 4
+tiles 0 24 8 4

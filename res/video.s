@@ -43,6 +43,26 @@
 	.globl PAT_Vid41
 	.globl PAT_Vid42
 	.globl PAT_Vid43
+	.globl PAT_Vid44
+	.globl PAT_Vid45
+	.globl PAT_Vid46
+	.globl PAT_Vid47
+	.globl PAT_Vid48
+	.globl PAT_Vid49
+	.globl PAT_Vid50
+	.globl PAT_Vid51
+	.globl PAT_Vid52
+	.globl PAT_Vid53
+	.globl PAT_Vid54
+	.globl PAT_Vid55
+	.globl PAT_Vid56
+	.globl PAT_Vid57
+	.globl PAT_Vid58
+	.globl PAT_Vid59
+	.globl PAT_Vid60
+	.globl PAT_Vid61
+	.globl PAT_Vid62
+	.globl PAT_Vid63
 
 * Need to align DMA uploaded resources to 128K
 	.align 0x20000
@@ -97,3 +117,26 @@ PAT_Vid40:	.incbin "res/video/40.pat"
 PAT_Vid41:	.incbin "res/video/41.pat"
 PAT_Vid42:	.incbin "res/video/42.pat"
 PAT_Vid43:	.incbin "res/video/43.pat"
+PAT_Vid44:	.incbin "res/video/44.pat"
+PAT_Vid45:	.incbin "res/video/45.pat"
+PAT_Vid46:	.incbin "res/video/46.pat"
+PAT_Vid47:	.incbin "res/video/47.pat"
+PAT_Vid48:	.incbin "res/video/48.pat"
+
+	.align 0x20000
+
+PAT_Vid49:	.incbin "res/video/49.pat"
+PAT_Vid50:	.incbin "res/video/50.pat"
+PAT_Vid51:	.incbin "res/video/51.pat"
+PAT_Vid52:	.incbin "res/video/52.pat"
+PAT_Vid53:	.incbin "res/video/53.pat"
+PAT_Vid54:	.incbin "res/video/54.pat"
+PAT_Vid55:	.incbin "res/video/55.pat"
+PAT_Vid56:	.incbin "res/video/56.pat"
+PAT_Vid57:	.incbin "res/video/57.pat"
+PAT_Vid58:	.incbin "res/video/58.pat"
+PAT_Vid59:	.incbin "res/video/59.pat"
+PAT_Vid60:	.incbin "res/video/60.pat"
+PAT_Vid61:	.incbin "res/video/61.pat"
+PAT_Vid62:	.incbin "res/video/62.pat"
+PAT_Vid63:	.incbin "res/video/63.pat"

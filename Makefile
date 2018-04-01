@@ -42,7 +42,7 @@ Z80S  = $(wildcard src/xgm/*.s80)
 CS    = $(wildcard src/*.c)
 CS   += $(wildcard res/video/*.c)
 SS    = $(wildcard src/*.s)
-SS   += res/video.s
+SS   += res/video.s res/tiles.s
 OBJS  = $(RESS:.res=.o)
 OBJS += $(Z80S:.s80=.o)
 OBJS += $(CS:.c=.o)
@@ -111,6 +111,6 @@ gold.elf: boot.o $(PATS) $(OBJS)
 .PHONY: clean
 
 clean:
-	rm -f $(OBJS) $(PATS) $(MAPS)
+	rm -f $(OBJS)
 	rm -f gold.bin gold.elf temp.bin symbol.txt boot.o
 	rm -f src/xgm/pcm_drv.s src/xgm/pcm_drv.o80 src/xgm/pcm_drv.h out.lst

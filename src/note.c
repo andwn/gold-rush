@@ -18,8 +18,26 @@
 #define GOOD_LATE		(JUDGEMENT_LINE + NOTE_SPEED * 6)
 #define BAD_LATE		(JUDGEMENT_LINE + NOTE_SPEED * 9)
 
+static int16_t note_delay;
+static uint16_t easy_mode;
+
 static uint16_t hits[5], old_hits[5];
 static uint16_t bar_percent, bar_sub, old_percent;
+
+static const uint8_t div5[101] = {
+	0,0,0,0,0,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,4,4,4,4,4,
+	5,5,5,5,5,6,6,6,6,6,7,7,7,7,7,8,8,8,8,8,9,9,9,9,9,
+	10,10,10,10,10,11,11,11,11,11,12,12,12,12,12,13,13,13,13,13,14,14,14,14,14,
+	15,15,15,15,15,16,16,16,16,16,17,17,17,17,17,18,18,18,18,18,19,19,19,19,19,
+	20,
+};
+static const uint8_t mod5[101] = {
+	0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,
+	0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,
+	0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,
+	0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,
+	0,
+};
 
 enum { COLOR_RED, COLOR_WHITE, COLOR_BLUE };
 
@@ -51,71 +69,119 @@ static const struct {
 typedef struct {
 	VDPSprite sprite;
 	uint16_t live;
-	uint16_t y_pos;
+	int16_t y_pos;
 	uint16_t button;
 } Note;
 Note note[MAX_NOTE];
+
+void notes_set_delay(int16_t delay) {
+	note_delay = delay * NOTE_SPEED;
+}
+
+void notes_set_easy(uint16_t easy) {
+	easy_mode = easy;
+}
+
+uint16_t notes_get_winner() {
+	return bar_percent | (easy_mode << 7);
+}
 
 void notes_init() {
 	memset(hits, 0, sizeof(hits) << 1);
 	memset(old_hits, 255, sizeof(hits) << 1);
 	bar_percent = bar_sub = 0;
-	old_percent = 255;
-	for(uint16_t i = MAX_NOTE; --i;) note[i] = (Note) {};
+	old_percent = 1;
+	for(uint16_t i = MAX_NOTE; i--;) note[i] = (Note) {};
 }
 
 static void note_hit(Note *n, uint16_t type) {
 	hits[type]++;
-	n->live = FALSE;
-	if(type != POOR) {
-		if(++bar_sub >= 2) {
-			bar_sub = 0;
-			if(++bar_percent > 100) bar_percent = 100;
+	n->live = 2;
+	switch(type) {
+		case PGREAT: bar_sub += easy_mode ? 50 : 25; /* fallthrough */
+		case GREAT: bar_sub += easy_mode ? 50 : 25; /* fallthrough */
+		case GOOD: bar_sub += easy_mode ? 50 : 25;
+		{
+			while(bar_sub >= 100) {
+				bar_sub -= 100;
+				if(++bar_percent > 100) bar_percent = 100;
+			}
 		}
-	} else {
-		if(bar_percent > 0) bar_percent--;
+		break;
+		case POOR: bar_percent -= easy_mode ? 1 : 2; /* fallthrough */
+		case BAD: bar_percent -= easy_mode ? 1 : 2;
+		{
+			if(bar_percent > 100) bar_percent = 0;
+		}
+		break;
+		
 	}
-	effect_show_word(type, 50);
+	effect_show_word(type, (n->y_pos < PGREAT_EARLY - note_delay) ? 1 
+						 : (n->y_pos >= GREAT_LATE - note_delay) ? 2 : 0);
 }
 
 void notes_update() {
 	for(uint16_t i = 0; i < MAX_NOTE; i++) {
 		if(!note[i].live) continue;
 		note[i].y_pos += NOTE_SPEED;
-		if(note[i].y_pos > BAD_LATE) {
-			note_hit(&note[i], POOR); // Missed
-		} else if(joy_press(note[i].button) && note[i].y_pos >= BAD_EARLY) {
-			if     (note[i].y_pos < GOOD_EARLY)   note_hit(&note[i], BAD);
-			else if(note[i].y_pos < GREAT_EARLY)  note_hit(&note[i], GOOD);
-			else if(note[i].y_pos < PGREAT_EARLY) note_hit(&note[i], GREAT);
-			else if(note[i].y_pos <= PGREAT_LATE) note_hit(&note[i], PGREAT);
-			else if(note[i].y_pos <= GREAT_LATE)  note_hit(&note[i], GREAT);
-			else if(note[i].y_pos <= GOOD_LATE)   note_hit(&note[i], GOOD);
-			else if(note[i].y_pos <= BAD_LATE)    note_hit(&note[i], BAD);
-		} else {
-			note[i].sprite.y = 0x80 + (note[i].y_pos >> NOTE_SFT);
-			if(note[i].y_pos < GREAT_LATE) {
-				vdp_sprites_add(&note[i].sprite, 1);
+		if(note[i].live == 1) {
+			if(note[i].y_pos > BAD_LATE - note_delay) {
+				note_hit(&note[i], joy_down(BTN_MODE) ? GREAT : POOR); // Missed
+			} else if(joy_press(note[i].button) && note[i].y_pos >= BAD_EARLY - note_delay) {
+				if     (note[i].y_pos < GOOD_EARLY - note_delay)   note_hit(&note[i], BAD);
+				else if(note[i].y_pos < GREAT_EARLY - note_delay)  note_hit(&note[i], GOOD);
+				else if(note[i].y_pos < PGREAT_EARLY - note_delay) note_hit(&note[i], GREAT);
+				else if(note[i].y_pos <= PGREAT_LATE - note_delay) note_hit(&note[i], PGREAT);
+				else if(note[i].y_pos <= GREAT_LATE - note_delay)  note_hit(&note[i], GREAT);
+				else if(note[i].y_pos <= GOOD_LATE - note_delay)   note_hit(&note[i], GOOD);
+				else if(note[i].y_pos <= BAD_LATE - note_delay)    note_hit(&note[i], BAD);
 			}
+		}
+		note[i].sprite.y = 0x80 + ((note[i].y_pos - note_delay) >> NOTE_SFT);
+		if(note[i].y_pos - note_delay < GREAT_LATE) {
+			vdp_sprites_add(&note[i].sprite, 1);
+		} else if(note[i].live == 2) {
+			note[i].live = 0;
 		}
 	}
 }
 
 void notes_draw_score() {
+	static const uint16_t x[5] = { 6, 12, 18, 24, 32 };
 	char str[40];
-	uint16_t x = 2;
 	for(uint16_t i = 0; i < 5; i++) {
 		if(old_hits[i] != hits[i]) {
-			sprintf(str, "%4hu", hits[i]);
-			vdp_puts(VDP_PLAN_A, str, x, 26);
+			sprintf(str, "%3hu", hits[i]);
+			vdp_puts(VDP_PLAN_A, str, x[i], 26);
 			old_hits[i] = hits[i];
 		}
-		x += 6;
 	}
 	if(old_percent != bar_percent) {
 		sprintf(str, "%3hu", bar_percent);
 		vdp_puts(VDP_PLAN_A, str, 19, 23);
-		old_percent = bar_percent;
+		while(old_percent < bar_percent) {
+			// Bar increasing
+			if(mod5[++old_percent] == 0) {
+				uint16_t fill = div5[old_percent];
+				if(fill > 16) {
+					vdp_map_set_xy(VDP_PLAN_A, TILE_BARINDEX+5, 3+fill-1, 24);
+				} else {
+					vdp_map_set_xy(VDP_PLAN_A, TILE_BARINDEX+2, 3+fill-1, 24);
+				}
+			}
+		}
+		while(old_percent > bar_percent) {
+			// Bar decreasong
+			if(mod5[--old_percent] == 0) {
+				uint16_t fill = div5[old_percent];
+				if(fill > 15) {
+					vdp_map_set_xy(VDP_PLAN_A, TILE_BARINDEX+3, 3+fill, 24);
+				} else {
+					vdp_map_set_xy(VDP_PLAN_A, TILE_BARINDEX, 3+fill, 24);
+				}
+			}
+		}
+		//old_percent = bar_percent;
 	}
 }
 
@@ -129,7 +195,7 @@ void note_create(uint8_t type) {
 				.attr = COLOR_DATA[color].attr,
 			};
 			note[i].live = TRUE;
-			note[i].y_pos = 0;
+			note[i].y_pos = -(NOTE_SPEED * 20);
 			note[i].button = NOTE_DATA[type].button;
 			break;
 		}

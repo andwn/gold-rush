@@ -39,6 +39,7 @@ static uint16_t word_type;
 static uint16_t word_pgreat_cycle;
 static uint16_t word_time;
 static VDPSprite word_spr[3];
+static VDPSprite word_speed_spr;
 
 void effects_init() {
 	for(uint16_t i = 0; i < 8; i++) {
@@ -56,12 +57,15 @@ void effects_init() {
 			x += 8;
 		}
 	}
+	word_speed_spr.x = 0x80 + 72;
+	word_speed_spr.y = 0x80 + 72;
+	word_speed_spr.size = SPRITE_SIZE(4, 1);
 	word_time = 0;
 }
 
-void effect_show_word(uint16_t type, uint16_t time) {
+void effect_show_word(uint16_t type, uint16_t fast_or_slow) {
 	word_type = type;
-	word_time = time;
+	word_time = 50;
 	uint16_t index = type;
 	if(type != PGREAT) index += 2;
 	word_spr[0].x = WORD_DATA[index].x;
@@ -77,6 +81,11 @@ void effect_show_word(uint16_t type, uint16_t time) {
 	word_spr[0].attr = WORD_DATA[index].spr_attr;
 	word_spr[1].attr = WORD_DATA[index].spr_attr + 16;
 	word_spr[2].attr = WORD_DATA[index].spr_attr + 32;
+	if(fast_or_slow == 1) { // Fast
+		word_speed_spr.attr = TILE_SPEEDINDEX;
+	} else if(fast_or_slow == 2) { // Slow
+		word_speed_spr.attr = TILE_SPEEDINDEX + 4;
+	}
 }
 
 void effects_update() {
@@ -98,11 +107,13 @@ void effects_update() {
 	}
 	if(word_time) word_time--;
 	if(word_time & 1) {
-		if(word_type == PGREAT) {
+		if(word_type == PGREAT) { // Cycle through colors for PGreat
 			if(++word_pgreat_cycle > 2) word_pgreat_cycle = 0;
 			word_spr[0].attr = WORD_DATA[word_pgreat_cycle].spr_attr;
 			word_spr[1].attr = WORD_DATA[word_pgreat_cycle].spr_attr + 16;
 			word_spr[2].attr = WORD_DATA[word_pgreat_cycle].spr_attr + 32;
+		} else {
+			vdp_sprites_add(&word_speed_spr, 1); // All non-PGreat have a speed
 		}
 		vdp_sprites_add(word_spr, (word_type > GREAT) ? 2 : 3);
 	}
