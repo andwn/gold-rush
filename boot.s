@@ -15,7 +15,7 @@ v_err_ext2: ds.w 1
 v_err_sr:	ds.w 1
 v_err_type:	ds.w 1
 
-.section .text
+.section .text.keepboot
 
 	.org    0x00000000
 

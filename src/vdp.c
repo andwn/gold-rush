@@ -38,6 +38,8 @@ void vdp_init() {
 }
 
 void vdp_reset() {
+	// Blank out first tile
+	vdp_load_tiles(blank_data, 0, 1);
 	// Reset the tilemaps
 	int16_t hscroll[32] = {};
 	vdp_map_clear(VDP_PLAN_A);

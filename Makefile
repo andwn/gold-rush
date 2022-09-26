@@ -8,17 +8,13 @@ LD   = $(MARSBIN)/m68k-elf-ld
 NM   = $(MARSBIN)/m68k-elf-nm
 OBJC = $(MARSBIN)/m68k-elf-objcopy
 
-# Z80 assembler used to build XGM
+# Z80 assembler used to build sound driver
 ASMZ80   = $(TOOLSBIN)/sjasm
 # Stef's Tools
 BINTOS   = $(TOOLSBIN)/bintos
-LZ4W     = java -jar $(TOOLSBIN)/lz4w.jar
-RESCOMP  = $(TOOLSBIN)/rescomp
-XGMTOOL  = $(TOOLSBIN)/xgmtool
-WAVTORAW = $(TOOLSBIN)/wavtoraw
+RESCOMP  = java -jar $(TOOLSBIN)/rescomp.jar
 # Sik's Tools
 MDTILER = $(TOOLSBIN)/mdtiler
-UFTC	= $(TOOLSBIN)/uftc
 
 # We need to use the GCC version to locate the correct plugin & libgcc path
 GCC_VER := $(shell $(CC) -dumpversion)
@@ -31,7 +27,7 @@ endif
 
 INCS     = -Isrc -Ires -Ires/video -Iinc
 LIBS     = -L$(MARSDEV)/m68k-elf/lib/gcc/m68k-elf/$(GCC_VER) -lgcc
-CCFLAGS  = -m68000 -Wall -Wextra -std=c99 -ffreestanding -fshort-enums
+CCFLAGS  = -m68000 -Wall -Wextra -std=c99 -ffreestanding -fshort-enums -fcommon
 OPTIONS  = 
 ASFLAGS  = -m68000 --register-prefix-optional
 LDFLAGS  = -T $(MARSDEV)/ldscripts/sgdk.ld -nostdlib
@@ -48,15 +44,7 @@ OBJS += $(Z80S:.s80=.o)
 OBJS += $(CS:.c=.o)
 OBJS += $(SS:.s=.o)
 
-# mdtiler scripts to convert pngs to tilesets and tilemaps
-MDTS  = $(wildcard res/*.mdt)
-PATS  = $(MDTS:.mdt=.pat)
-MAPS  = $(MDTS:.mdt=.map)
-
-#FRAMES = $(wildcard res/video/out16/*.mdt)
-#FRAMEO = $(FRAMES:.mdt=.cpat)
-
-.PHONY: all release debug main-build
+.PHONY: all release debug main-build pats
 
 all: release
 
@@ -81,7 +69,7 @@ gold.bin: gold.elf
 	$(OBJC) -O binary $< temp.bin
 	dd if=temp.bin of=$@ bs=8K conv=sync
 
-gold.elf: boot.o $(PATS) $(OBJS)
+gold.elf: boot.o pats $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) boot.o $(OBJS) $(LIBS)
 
 %.o: %.c
@@ -101,16 +89,14 @@ gold.elf: boot.o $(PATS) $(OBJS)
 %.s: %.o80
 	$(BINTOS) $<
 
-%.cpat: %.pat
-	$(LZ4W) p "$<" "$@" -s
-
-%.pat: %.mdt
-	$(MDTILER) $<
+pats:
+	$(MDTILER) res/tiles.mdt
+	$(MDTILER) res/video.mdt
 
 
 .PHONY: clean
 
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJS) res/*.pat res/video/*.pat
 	rm -f gold.bin gold.elf temp.bin symbol.txt boot.o
 	rm -f src/xgm/pcm_drv.s src/xgm/pcm_drv.o80 src/xgm/pcm_drv.h out.lst

@@ -21,7 +21,7 @@ BIN MAP_Layout		"layout.map"
 #BIN PAT_Glow		"hitglow.pat"
 
 # Audio
-PCM PCM_GoldRush	"video/audio.pcm"	0
+BIN PCM_GoldRush	"video/audio.pcm" 256
 
 # Video palettes
 PALETTE PAL_Vid01	"video/01.png"

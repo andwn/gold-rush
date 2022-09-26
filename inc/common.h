@@ -30,49 +30,9 @@ typedef volatile u16 vu16;
 typedef volatile u32 vu32;
 
 typedef struct {
-    u16 index;
     u16 length;
     u16 *data;
 } Palette;
-
-typedef struct {
-    u16 compression;
-    u16 numTile;
-    u32 *tiles;
-} TileSet;
-
-typedef struct {
-    s16 y;
-    u16 size;
-    s16 x;
-    u16 numTile;
-} VDPSpriteInf;
-
-typedef struct {
-    u16 numSprite;
-    VDPSpriteInf **vdpSpritesInf;
-    u32 collision_unused;
-    TileSet *tileset;
-    s16 w;
-    s16 h;
-    u16 timer;
-} AnimationFrame;
-
-typedef struct {
-    u16 numFrame;
-    AnimationFrame **frames;
-    u16 length;
-    u8 *sequence;
-    s16 loop;
-} Animation;
-
-typedef struct {
-    u32 palette_unused;
-    u16 numAnimation;
-    Animation **animations;
-    u16 maxNumTile;
-    u16 maxNumSprite;
-} SpriteDefinition;
 
 // Helper to grab tiles from a SpriteDefinition
 #define SPR_TILES(spr, a, f) ((spr)->animations[a]->frames[f]->tileset->tiles)
